@@ -24,7 +24,6 @@ enum class MessageType
   GameStatePreviousPlayInfo,
   GameStatePreviousPlayResult,
   DraftTimer,
-  TrainingModeGolfing,
 
   // This entry must be kept last so that persistent typed messages are
   // displayed before other messages
