@@ -378,169 +378,221 @@ void TrainingMode(const Core::CPUThreadGuard& guard)
   if (!g_ActiveConfig.bTrainingModeOverlay || isTagSetActive())
     return;
 
-  if (mGameBeingPlayed != GameName::MarioBaseball)
-    return;
-
-  //bool isPitchThrown = PowerPC::MMU::HostRead_U8(0x80895D6C) == 1 ? true : false;
-  bool isField = PowerPC::MMU::HostRead_U8(guard, aIsField) == 1 ? true : false;
-  bool isInGame = PowerPC::MMU::HostRead_U8(guard, aIsInGame) == 1 ? true : false;
-  bool ContactMade = PowerPC::MMU::HostRead_U8(guard, aContactMade) == 1 ? true : false;
-
-  // Batting Training Mode stats
-  if (ContactMade && !previousContactMade)
+  if (mGameBeingPlayed == GameName::MarioBaseball)
   {
-    u8 BatterPort = PowerPC::MMU::HostRead_U8(guard, aBatterPort);
-    if (BatterPort > 0)
-      BatterPort--;
-    u32 stickDirectionAddr = 0x8089392D + (0x10 * BatterPort);
-    float contactQuality = PowerPC::MMU::HostRead_F32(guard, aAB_ContactQuality);
-    u16 contactFrame = PowerPC::MMU::HostRead_U16(guard, aContactFrame);
-    u8 typeOfContact_Value = PowerPC::MMU::HostRead_U8(guard, aTypeOfContact);
-    std::string typeOfContact;
-    u8 inputDirection_Value = PowerPC::MMU::HostRead_U8(guard, stickDirectionAddr) & 0xF;
-    std::string inputDirection;
-    int chargeUp = static_cast<int>(roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aChargeUp)) * 100)); 
-    int chargeDown = static_cast<int>(roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aChargeDown)) * 100));
+    // bool isPitchThrown = PowerPC::MMU::HostRead_U8(0x80895D6C) == 1 ? true : false;
+    bool isField = PowerPC::MMU::HostRead_U8(guard, aIsField) == 1 ? true : false;
+    bool isInGame = PowerPC::MMU::HostRead_U8(guard, aIsInGame) == 1 ? true : false;
+    bool ContactMade = PowerPC::MMU::HostRead_U8(guard, aContactMade) == 1 ? true : false;
 
-    float angle = roundf((float)PowerPC::MMU::HostRead_U16(guard, aBallAngle) * 36000 / 4096) / 100; // 0x400 == 90°, 0x800 == 180°, 0x1000 == 360°
-    float xVelocity = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallVelocity_X)) * 6000) / 100;  // * 60 cause default units are meters per frame
-    float yVelocity = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallVelocity_Y)) * 6000) / 100;
-    float zVelocity = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallVelocity_Z)) * 6000) / 100;
-    float netVelocity = vectorMagnitude(xVelocity, yVelocity, zVelocity);
+    // Batting Training Mode stats
+    if (ContactMade && !previousContactMade)
+    {
+      u8 BatterPort = PowerPC::MMU::HostRead_U8(guard, aBatterPort);
+      if (BatterPort > 0)
+        BatterPort--;
+      u32 stickDirectionAddr = 0x8089392D + (0x10 * BatterPort);
+      float contactQuality = PowerPC::MMU::HostRead_F32(guard, aAB_ContactQuality);
+      u16 contactFrame = PowerPC::MMU::HostRead_U16(guard, aContactFrame);
+      u8 typeOfContact_Value = PowerPC::MMU::HostRead_U8(guard, aTypeOfContact);
+      std::string typeOfContact;
+      u8 inputDirection_Value = PowerPC::MMU::HostRead_U8(guard, stickDirectionAddr) & 0xF;
+      std::string inputDirection;
+      int chargeUp =
+          static_cast<int>(roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aChargeUp)) * 100));
+      int chargeDown = static_cast<int>(
+          roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aChargeDown)) * 100));
 
-    // convert type of contact to string
-    if (typeOfContact_Value == 0)
-      typeOfContact = "Sour - Left";
-    else if (typeOfContact_Value == 1)
-      typeOfContact = "Nice - Left";
-    else if (typeOfContact_Value == 2)
-      typeOfContact = "Perfect";
-    else if (typeOfContact_Value == 3)
-      typeOfContact = "Nice - Right";
-    else  // typeOfContact_Value == 4
-      typeOfContact = "Sour - Right";
+      float angle = roundf((float)PowerPC::MMU::HostRead_U16(guard, aBallAngle) * 36000 / 4096) /
+                    100;  // 0x400 == 90°, 0x800 == 180°, 0x1000 == 360°
+      float xVelocity =
+          roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallVelocity_X)) * 6000) /
+          100;  // * 60 cause default units are meters per frame
+      float yVelocity =
+          roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallVelocity_Y)) * 6000) / 100;
+      float zVelocity =
+          roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallVelocity_Z)) * 6000) / 100;
+      float netVelocity = vectorMagnitude(xVelocity, yVelocity, zVelocity);
 
-    // convert input direction to string
-    if (inputDirection_Value == 0)
-      inputDirection = "None";
-    else if (inputDirection_Value == 1)
-      inputDirection = "Left";
-    else if (inputDirection_Value == 2)
-      inputDirection = "Right";
-    else if (inputDirection_Value == 4)
-      inputDirection = "Down";
-    else if (inputDirection_Value == 8)
-      inputDirection = "Up";
-    else if (inputDirection_Value == 5)
-      inputDirection = "Down/Left";
-    else if (inputDirection_Value == 9)
-      inputDirection = "Up/Left";
-    else if (inputDirection_Value == 6)
-      inputDirection = "Down/Right";
-    else if (inputDirection_Value == 10)
-      inputDirection = "Up/Right";
-    else if (inputDirection_Value == 3)
-      inputDirection = "Left/Right";
-    else if (inputDirection_Value == 12)
-      inputDirection = "Up/Down";
-    else
-      inputDirection = "Unknown";
+      // convert type of contact to string
+      if (typeOfContact_Value == 0)
+        typeOfContact = "Sour - Left";
+      else if (typeOfContact_Value == 1)
+        typeOfContact = "Nice - Left";
+      else if (typeOfContact_Value == 2)
+        typeOfContact = "Perfect";
+      else if (typeOfContact_Value == 3)
+        typeOfContact = "Nice - Right";
+      else  // typeOfContact_Value == 4
+        typeOfContact = "Sour - Right";
 
-    int totalCharge;
-    chargeUp == 100 ? totalCharge = chargeDown : totalCharge = chargeUp;
+      // convert input direction to string
+      if (inputDirection_Value == 0)
+        inputDirection = "None";
+      else if (inputDirection_Value == 1)
+        inputDirection = "Left";
+      else if (inputDirection_Value == 2)
+        inputDirection = "Right";
+      else if (inputDirection_Value == 4)
+        inputDirection = "Down";
+      else if (inputDirection_Value == 8)
+        inputDirection = "Up";
+      else if (inputDirection_Value == 5)
+        inputDirection = "Down/Left";
+      else if (inputDirection_Value == 9)
+        inputDirection = "Up/Left";
+      else if (inputDirection_Value == 6)
+        inputDirection = "Down/Right";
+      else if (inputDirection_Value == 10)
+        inputDirection = "Up/Right";
+      else if (inputDirection_Value == 3)
+        inputDirection = "Left/Right";
+      else if (inputDirection_Value == 12)
+        inputDirection = "Up/Down";
+      else
+        inputDirection = "Unknown";
 
-    OSD::AddTypedMessage(OSD::MessageType::TrainingModeBatting, fmt::format(
-      "Batting Data:                    \n"
-      "Contact Frame:  {}\n"
-      "Type of Contact:  {}\n"
-      "Contact Quality: {}\n"
-      "Input Direction:  {}\n"
-      "Charge Percent:  {}%\n"
-      "Ball Angle:  {}°\n\n"
-      "Exit Velocities:  \n"
-      "X :  {} m/s  -->  {} mph\n"
-      "Y:  {} m/s  -->  {} mph\n"
-      "Z :  {} m/s  -->  {} mph\n"
-      "Net:  {} m/s  -->  {} mph",
-      contactFrame,
-      typeOfContact,
-      contactQuality,
-      inputDirection,
-      totalCharge,
-      angle,
-      xVelocity, ms_to_mph(xVelocity),
-      yVelocity, ms_to_mph(yVelocity),
-      zVelocity, ms_to_mph(zVelocity),
-      netVelocity, ms_to_mph(netVelocity)),
-      8000); // message time & color
+      int totalCharge;
+      chargeUp == 100 ? totalCharge = chargeDown : totalCharge = chargeUp;
+
+      OSD::AddTypedMessage(OSD::MessageType::TrainingModeBatting,
+                           fmt::format("Batting Data:                    \n"
+                                       "Contact Frame:  {}\n"
+                                       "Type of Contact:  {}\n"
+                                       "Contact Quality: {}\n"
+                                       "Input Direction:  {}\n"
+                                       "Charge Percent:  {}%\n"
+                                       "Ball Angle:  {}°\n\n"
+                                       "Exit Velocities:  \n"
+                                       "X :  {} m/s  -->  {} mph\n"
+                                       "Y:  {} m/s  -->  {} mph\n"
+                                       "Z :  {} m/s  -->  {} mph\n"
+                                       "Net:  {} m/s  -->  {} mph",
+                                       contactFrame, typeOfContact, contactQuality, inputDirection,
+                                       totalCharge, angle, xVelocity, ms_to_mph(xVelocity),
+                                       yVelocity, ms_to_mph(yVelocity), zVelocity,
+                                       ms_to_mph(zVelocity), netVelocity, ms_to_mph(netVelocity)),
+                           8000);  // message time & color
     }
 
+    // Coordinate data
+    if (isInGame)
+    {
+      float BallPos_X =
+          roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallPosition_X)) * 100) / 100;
+      float BallPos_Y =
+          roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallPosition_Y)) * 100) / 100;
+      float BallPos_Z =
+          roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallPosition_Z)) * 100) / 100;
+      float BallVel_X =
+          isField ?
+              roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallVelocity_X)) * 6000) / 100 :
+              roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aPitchedBallVelocity_X)) * 6000) /
+                  100;
+      float BallVel_Y =
+          isField ? RoundZ(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallVelocity_Y)) * 6000) /
+                        100 :  // floor small decimal to prevent weirdness
+              RoundZ(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aPitchedBallVelocity_Y)) * 6000) /
+                  100;
+      float BallVel_Z =
+          isField ?
+              roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallVelocity_Z)) * 6000) / 100 :
+              roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aPitchedBallVelocity_Z)) * 6000) /
+                  100;
+      float BallVel_Net = roundf(vectorMagnitude(BallVel_X, BallVel_Y, BallVel_Z) * 100) / 100;
 
-  // Coordinate data
-  if (isInGame)
-  {
-    float BallPos_X = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallPosition_X)) * 100) / 100;
-    float BallPos_Y = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallPosition_Y)) * 100) / 100;
-    float BallPos_Z = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallPosition_Z)) * 100) / 100;
-    float BallVel_X = isField ? roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallVelocity_X)) * 6000) / 100 :
-                                roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aPitchedBallVelocity_X)) * 6000) / 100;
-    float BallVel_Y = isField ? RoundZ(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallVelocity_Y)) * 6000) / 100 :// floor small decimal to prevent weirdness
-                                RoundZ(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aPitchedBallVelocity_Y)) * 6000) / 100;
-    float BallVel_Z = isField ? roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aBallVelocity_Z)) * 6000) / 100 :
-                                roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, aPitchedBallVelocity_Z)) * 6000) / 100;
-    float BallVel_Net = roundf(vectorMagnitude(BallVel_X, BallVel_Y, BallVel_Z) * 100) / 100;
+      int baseOffset = 0x268 * PowerPC::MMU::HostRead_U8(
+                                   guard, 0x80892801);  // used to get offsed for baseFielderAddr
+      u32 baseFielderAddr = 0x8088F368 + baseOffset;    // 0x0 == x; 0x8 == y; 0xc == z
 
-    int baseOffset= 0x268 * PowerPC::MMU::HostRead_U8(guard, 0x80892801);  // used to get offsed for baseFielderAddr
-    u32 baseFielderAddr = 0x8088F368 + baseOffset;        // 0x0 == x; 0x8 == y; 0xc == z
+      float FielderPos_X =
+          roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, baseFielderAddr)) * 100) / 100;
+      float FielderPos_Y =
+          roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, baseFielderAddr + 0xc)) * 100) / 100;
+      float FielderPos_Z =
+          roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, baseFielderAddr + 0x8)) * 100) / 100;
+      float FielderVel_X =
+          roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, baseFielderAddr + 0x30)) * 6000) /
+          100;
+      // float FielderVel_Y = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(baseFielderAddr + 0x15C))
+      // * 6000) / 100; // this addr is wrong
+      float FielderVel_Z =
+          roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, baseFielderAddr + 0x34)) * 6000) /
+          100;
+      float FielderVel_Net =
+          roundf(vectorMagnitude(FielderVel_X, 0 /*FielderVel_Y*/, FielderVel_Z) * 100) / 100;
 
-    float FielderPos_X = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, baseFielderAddr)) * 100) / 100;
-    float FielderPos_Y = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, baseFielderAddr + 0xc)) * 100) / 100;
-    float FielderPos_Z = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, baseFielderAddr + 0x8)) * 100) / 100;
-    float FielderVel_X = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, baseFielderAddr + 0x30)) * 6000) / 100;
-    //float FielderVel_Y = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(baseFielderAddr + 0x15C)) * 6000) / 100; // this addr is wrong
-    float FielderVel_Z = roundf(u32ToFloat(PowerPC::MMU::HostRead_U32(guard, baseFielderAddr + 0x34)) * 6000) / 100;
-    float FielderVel_Net = roundf(vectorMagnitude(FielderVel_X, 0 /*FielderVel_Y*/, FielderVel_Z) * 100) / 100;
+      OSD::AddTypedMessage(
+          OSD::MessageType::TrainingModeBallCoordinates,
+          fmt::format("Ball Coordinates:                \n"
+                      "X:  {}\n"
+                      "Y:  {}\n"
+                      "Z:  {}\n\n"
+                      "Ball Velocity:  \n"
+                      "X:  {} m/s  -->  {} mph\n"
+                      "Y:  {} m/s  -->  {} mph\n"
+                      "Z:  {} m/s  -->  {} mph\n"
+                      "Net:  {} m/s  -->  {} mph\n",
+                      BallPos_X, BallPos_Y, BallPos_Z, BallVel_X, ms_to_mph(BallVel_X), BallVel_Y,
+                      ms_to_mph(BallVel_Y), BallVel_Z, ms_to_mph(BallVel_Z), BallVel_Net,
+                      ms_to_mph(BallVel_Net)),
+          200, OSD::Color::CYAN);  // short time cause we don't want this info to linger
 
-    OSD::AddTypedMessage(OSD::MessageType::TrainingModeBallCoordinates, fmt::format(
-      "Ball Coordinates:                \n"
-      "X:  {}\n"
-      "Y:  {}\n"
-      "Z:  {}\n\n"
-      "Ball Velocity:  \n"
-      "X:  {} m/s  -->  {} mph\n"
-      "Y:  {} m/s  -->  {} mph\n"
-      "Z:  {} m/s  -->  {} mph\n"
-      "Net:  {} m/s  -->  {} mph\n",
-      BallPos_X,
-      BallPos_Y,
-      BallPos_Z,
-      BallVel_X, ms_to_mph(BallVel_X),
-      BallVel_Y, ms_to_mph(BallVel_Y),
-      BallVel_Z, ms_to_mph(BallVel_Z),
-      BallVel_Net, ms_to_mph(BallVel_Net)
-    ), 200, OSD::Color::CYAN);  // short time cause we don't want this info to linger
+      OSD::AddTypedMessage(OSD::MessageType::TrainingModeFielderCoordinates,
+                           fmt::format("Fielder Coordinates:             \n"
+                                       "X:  {}\n"
+                                       "Y:  {}\n"
+                                       "Z:  {}\n\n"
+                                       "Fielder Velocity: \n"
+                                       "X:  {} m/s  -->  {} mph\n"
+                                       //"Y:  {} m/s  -->  {} mph\n"
+                                       "Z:  {} m/s  -->  {} mph\n"
+                                       "Net:  {} m/s  -->  {} mph",
+                                       FielderPos_X, FielderPos_Y, FielderPos_Z, FielderVel_X,
+                                       ms_to_mph(FielderVel_X),
+                                       // FielderVel_Y, ms_to_mph(FielderVel_Y),
+                                       FielderVel_Z, ms_to_mph(FielderVel_Z), FielderVel_Net,
+                                       ms_to_mph(FielderVel_Net)),
+                           200, OSD::Color::CYAN);
+    }
 
-    OSD::AddTypedMessage(OSD::MessageType::TrainingModeFielderCoordinates, fmt::format(
-      "Fielder Coordinates:             \n"
-      "X:  {}\n"
-      "Y:  {}\n"
-      "Z:  {}\n\n"
-      "Fielder Velocity: \n"
-      "X:  {} m/s  -->  {} mph\n"
-      //"Y:  {} m/s  -->  {} mph\n"
-      "Z:  {} m/s  -->  {} mph\n"
-      "Net:  {} m/s  -->  {} mph",
-      FielderPos_X,
-      FielderPos_Y,
-      FielderPos_Z,
-      FielderVel_X, ms_to_mph(FielderVel_X),
-      //FielderVel_Y, ms_to_mph(FielderVel_Y),
-      FielderVel_Z, ms_to_mph(FielderVel_Z),
-      FielderVel_Net, ms_to_mph(FielderVel_Net)
-    ), 200, OSD::Color::CYAN);
+    previousContactMade = ContactMade;
   }
+  else if (mGameBeingPlayed == GameName::ToadstoolTour)
+  {
+    float DistanceRemainingToHole = PowerPC::MMU::HostRead_F32(guard, aDistanceRemainingToHole);
+    int ShotAccuracy = PowerPC::MMU::HostRead_U32(guard, aShotAccuracy);
+    u32 PowerMeterDistance = PowerPC::MMU::HostRead_U32(guard, aPowerMeterDistance);
+    float CurrentShotAimAngle = PowerPC::MMU::HostRead_F32(guard, aCurrentShotAimAngle);
+    float SimLineEndpointX = PowerPC::MMU::HostRead_F32(guard, aSimLineEndpointX);
+    float SimLineEndpointZ = PowerPC::MMU::HostRead_F32(guard, aSimLineEndpointZ);
+    float SimLineEndpointY = PowerPC::MMU::HostRead_F32(guard, aSimLineEndpointY);
+    int PreShotVerticalAdjustment = PowerPC::MMU::HostRead_U32(guard, aPreShotVerticalAdjustment);
+    int PreShotHorizontalAdjustment =
+        PowerPC::MMU::HostRead_U32(guard, aPreShotHorizontalAdjustment);
+    int ActiveShotVerticalAdjustment =
+        PowerPC::MMU::HostRead_U32(guard, aActiveShotVerticalAdjustment);
+    int ActiveShotHorizontalAdjustment =
+        PowerPC::MMU::HostRead_U32(guard, aActiveShotHorizontalAdjustment);
 
-  previousContactMade = ContactMade;
+    OSD::AddTypedMessage(OSD::MessageType::TrainingModeGolfing,
+                         fmt::format("Golf Training Mode:                    \n"
+                                     "Distance to Hole:  {}\n"
+                                     "Shot Aim Angle:  {}\n"
+                                     "Vertical Adj:  {} / {}\n"
+                                     "Horizontal Adj:  {} / {}\n"
+                                     "Shot Accuracy:  {}\n"
+                                     "Power Meter Accuracy:  {}\n"
+                                     "Ball Sim Aim X:  {}\n"
+                                     "Ball Sim Aim Y:  {}\n"
+                                     "Ball Sim Aim Z:  {}\n",
+                                     DistanceRemainingToHole, CurrentShotAimAngle,
+                                     PreShotVerticalAdjustment, ActiveShotVerticalAdjustment,
+                                     PreShotHorizontalAdjustment, ActiveShotHorizontalAdjustment,
+                                     ShotAccuracy, PowerMeterDistance, SimLineEndpointX,
+                                     SimLineEndpointY, SimLineEndpointZ),
+                         8000);  // message time & color
+  }
 }
 
 void DisplayPlayerNames(const Core::CPUThreadGuard& guard)
@@ -610,6 +662,23 @@ void DisplayPlayerNames(const Core::CPUThreadGuard& guard)
       break;
 
     u8 GolferPort = PowerPC::MMU::HostRead_U8(guard, aCurrentGolfer);
+    switch (GolferPort)
+    {
+    case 0:
+      GolferPort = PowerPC::MMU::HostRead_U8(guard, aPlayer1Port);
+      break;
+    case 1:
+      GolferPort = PowerPC::MMU::HostRead_U8(guard, aPlayer2Port);
+      break;
+    case 2:
+      GolferPort = PowerPC::MMU::HostRead_U8(guard, aPlayer3Port);
+      break;
+    case 3:
+      GolferPort = PowerPC::MMU::HostRead_U8(guard, aPlayer4Port);
+      break;
+    default:
+      break;
+    }
     std::string GolferName = "";
 
     if (NetPlay::IsNetPlayRunning())
