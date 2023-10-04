@@ -15,7 +15,7 @@ Please read the [FAQ](https://dolphin-emu.org/docs/faq/) before using Dolphin.
 * OS
     * Windows (10 or higher).
     * Linux.
-    * macOS (10.15 Catalina or higher).
+    * macOS (11.0 Catalina or higher).
     * Unix-like systems other than Linux are not officially supported but might work.
 * Processor
     * A CPU with SSE2 support.
@@ -251,4 +251,4 @@ then exit.
   -l, --compression_level
                         Optional. Print the level of compression for WIA/RVZ
                         formats, then exit.
-```
+``` 

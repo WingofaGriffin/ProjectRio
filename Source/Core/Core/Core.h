@@ -281,14 +281,23 @@ static const u32 aWhoPaused = 0x8039D7D3; // 2 == fielder, 1 == batter
 //static const u32 aMatchStarted = 0x8036F3B8;  // bool for if a game is in session
 static const u32 aSceneId = 0x800E877F;
 
-
+// toadstooltour addresses
+static const u32 aDistanceRemainingToHole = 0x802D7368;
+static const u32 aShotAccuracy = 0x804ECD30;
+static const u32 aPowerMeterDistance = 0x804ECD54;
+static const u32 aCurrentShotAimAngle = 0x804ECD5C;  // radians
+static const u32 aSimLineEndpointX = 0x804ECD70;
+static const u32 aSimLineEndpointZ = 0x804ECD74;
+static const u32 aSimLineEndpointY = 0x804ECD78;
+static const u32 aPreShotVerticalAdjustment = 0x804ECDA0;
+static const u32 aPreShotHorizontalAdjustment = 0x804ECDA4;
+static const u32 aActiveShotVerticalAdjustment = 0x804ECDA8;
+static const u32 aActiveShotHorizontalAdjustment = 0x804ECDAC;
 static const u32 aCurrentGolfer = 0x804E68FB; // 0-3, indicates current golfing player index
 static const u32 aPlayer1Port = 0x804E6674; 
 static const u32 aPlayer2Port = 0x804E6675;
 static const u32 aPlayer3Port = 0x804E6676; 
 static const u32 aPlayer4Port = 0x804E6677; 
-
-
 static const u32 aPlayerCount = 0x804E68FA; // indicates total player count
 static const u32 aIsGolfMatch = 0x80162B5F; // 1 if golfing session active; 0 on menus
 }  // namespace Core

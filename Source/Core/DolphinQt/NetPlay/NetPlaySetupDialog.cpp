@@ -563,6 +563,14 @@ void NetPlaySetupDialog::UpdateGameModeDescription()
 
 void NetPlaySetupDialog::CheckGameModesAreAllowed()
 {
+  int currentIndex = m_host_games->currentIndex();
+  if (currentIndex < 0 || currentIndex >= m_host_games->count())
+  {
+    m_host_game_mode->setCurrentIndex(0);
+    m_host_game_mode->setDisabled(true);
+    return;
+  }
+
   std::string game_id = host_games_map.at(m_host_games->currentIndex()).GetGameID();
   if (game_id == "GYQE01")
     m_host_game_mode->setEnabled(true);
