@@ -139,6 +139,7 @@ static int nLagSpikes = 0;
 static int previousPing = 50;
 
 static int draftTimer = 0;
+static int nextGolferID = 0;
 
 #ifdef USE_MEMORYWATCHER
 static std::unique_ptr<MemoryWatcher> s_memory_watcher;
@@ -270,7 +271,8 @@ void RunRioFunctions(const Core::CPUThreadGuard& guard)
 
   DisplayPlayerNames(guard);
   CodeWriter.RunCodeInject(guard);
-  AutoGolfMode(guard);
+  if (IsGolfMode())
+    AutoGolfMode(guard);
   TrainingMode(guard);
 }
 
@@ -289,24 +291,14 @@ void OnFrameEnd()
 
 void AutoGolfMode(const Core::CPUThreadGuard& guard)
 {
-  if (!IsGolfMode())
-    return;
-
-  int nextGolfer = -1;
-
   switch (mGameBeingPlayed) {
   case GameName::MarioBaseball:
-    MSSBCalculateNextGolfer(guard, nextGolfer);
+    MSSBCalculateNextGolfer(guard, nextGolferID);
     break;
   case GameName::ToadstoolTour:
-    MGTTCalculateNextGolfer(guard, nextGolfer);
+    MGTTCalculateNextGolfer(guard, nextGolferID);
     break;
   }
-
-  if (nextGolfer >= 4 || nextGolfer < 0)  // something's wrong. probably a CPU player                                         
-    return;   // return to avoid array out-of-range errors
-
-  NetPlay::NetPlayClient::AutoGolfMode(nextGolfer);
 }
 
 void MSSBCalculateNextGolfer(const Core::CPUThreadGuard& guard, int& nextGolfer)
@@ -925,6 +917,8 @@ bool Init(std::unique_ptr<BootParameters> boot, const WindowSystemInfo& wsi)
     mGameBeingPlayed = GameName::UnknownGame;
   else
     mGameBeingPlayed = mGameMap.at(game_id);
+
+  nextGolferID = 0;
 
   std::optional<std::vector<ClientCode>> client_codes =
       GetActiveTagSet(NetPlay::IsNetPlayRunning()).has_value() ?
@@ -1831,6 +1825,11 @@ std::optional<std::vector<std::string>> GetTagSetGeckoString()
     return std::nullopt;
 
   return tagset_active.value().gecko_codes_string();
+}
+
+int GetNextGolferID()
+{
+  return nextGolferID;
 }
 
 }  // namespace Core

@@ -199,7 +199,6 @@ public:
   static void SendChecksum(u8 checksumId, u64 frame, u32 checksum);
   bool DoAllPlayersHaveGame();
 
-  static void AutoGolfMode(int nextGolfer);
   static std::string GetNetplayNames(u8 PortInt);
   static bool isNight();
   static bool isDisableReplays();
@@ -316,7 +315,7 @@ private:
   void ComputeGameDigest(const SyncIdentifier& sync_identifier);
   void DisplayPlayersPing();
 
-  void AutoGolfModeLogic(int nextGolfer);
+  void AutoGolfMode();
 
   u32 GetPlayersMaxPing() const;
 
