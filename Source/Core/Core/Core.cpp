@@ -1833,4 +1833,18 @@ std::optional<std::vector<std::string>> GetTagSetGeckoString()
   return tagset_active.value().gecko_codes_string();
 }
 
+std::optional<u32> getGameFreeMemory()
+{
+  switch (mGameBeingPlayed) {
+  case GameName::MarioBaseball:
+    return 0x802edb10;
+  case GameName::ToadstoolTour:
+    return std::nullopt;
+  case GameName::UnknownGame:
+    return std::nullopt;
+  default:
+    return std::nullopt;
+  }
+}
+
 }  // namespace Core

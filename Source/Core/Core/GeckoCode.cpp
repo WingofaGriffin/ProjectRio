@@ -162,8 +162,10 @@ static Installation InstallCodeHandlerLocked(const Core::CPUThreadGuard& guard)
     mmio_addr = 0xCD;
   }
 
-  // TODO: Generalize this for all Rio Games
-  const u32 msb_base_address = 0x802EDB10;
+  // Gets the free memory location for the current game. If game has not specified a
+  auto free_memory_base_address = Core::getGameFreeMemory();
+  bool use_free_memory = Core::getGameFreeMemory().has_value();
+  const u32 memory_base_address = use_free_memory ? free_memory_base_address.value() : INSTALLER_BASE_ADDRESS;
 
   // Install code handler
   for (u32 i = 0; i < data.size(); ++i) {
@@ -175,23 +177,19 @@ static Installation InstallCodeHandlerLocked(const Core::CPUThreadGuard& guard)
     // 00000110: 3cc0 8000 7cd0 3378 3900 0000 3c60 00d0  <...|.3x9...<`..
     // ...
 
-    if (i==262){
-      // std::cout << "i=" << std::dec << i << " data=" << std::to_string(data[i]) << "\n";
-      PowerPC::MMU::HostWrite_U8(guard, (msb_base_address & 0xFF000000) >> 24, INSTALLER_BASE_ADDRESS + i);
+    if (i==262 && use_free_memory){
+      PowerPC::MMU::HostWrite_U8(guard, (memory_base_address & 0xFF000000) >> 24, INSTALLER_BASE_ADDRESS + i);
     }
-    else if (i==263) {
-      // std::cout << "i=" << std::dec << i << " data=" << std::to_string(data[i]) << "\n";
-      PowerPC::MMU::HostWrite_U8(guard, (msb_base_address & 0x00FF0000) >> 16, INSTALLER_BASE_ADDRESS + i);
+    else if (i==263 && use_free_memory) {
+      PowerPC::MMU::HostWrite_U8(guard, (memory_base_address & 0x00FF0000) >> 16, INSTALLER_BASE_ADDRESS + i);
     }
-    else if (i==266) {
-      // std::cout << "i=" << std::dec << i << " data=" << std::to_string(data[i]) << "\n";
-      PowerPC::MMU::HostWrite_U8(guard, (msb_base_address & 0x0000FF00) >> 8, INSTALLER_BASE_ADDRESS + i);
+    else if (i==266 && use_free_memory) {
+      PowerPC::MMU::HostWrite_U8(guard, (memory_base_address & 0x0000FF00) >> 8, INSTALLER_BASE_ADDRESS + i);
     }
-    else if (i==267) {
-      // std::cout << "i=" << std::dec << i << " data=" << std::to_string(data[i]) << "\n";
-      PowerPC::MMU::HostWrite_U8(guard, (msb_base_address & 0x000000FF), INSTALLER_BASE_ADDRESS + i);
+    else if (i==267 && use_free_memory) {
+      PowerPC::MMU::HostWrite_U8(guard, (memory_base_address & 0x000000FF), INSTALLER_BASE_ADDRESS + i);
     }
-    else {
+    else { //Just write the binary as is
       PowerPC::MMU::HostWrite_U8(guard, data[i], INSTALLER_BASE_ADDRESS + i);
     }
   }
@@ -208,29 +206,16 @@ static Installation InstallCodeHandlerLocked(const Core::CPUThreadGuard& guard)
     }
   }
 
-  const u32 codelist_base_address =
-      INSTALLER_BASE_ADDRESS + static_cast<u32>(data.size()) - CODE_SIZE;
-  const u32 codelist_end_address = INSTALLER_END_ADDRESS;
-
   // Write a magic value to 'gameid' (codehandleronly does not actually read this).
   // This value will be read back and modified over time by HLE_Misc::GeckoCodeHandlerICacheFlush.
   PowerPC::MMU::HostWrite_U32(guard, MAGIC_GAMEID, INSTALLER_BASE_ADDRESS);
 
-  // Create GCT in memory
-  PowerPC::MMU::HostWrite_U32(guard, 0x00d0c0de, codelist_base_address);
-  PowerPC::MMU::HostWrite_U32(guard, 0x00d0c0de, codelist_base_address + 4);
-
   // Create GCT in free memory (Preamble)
-  PowerPC::MMU::HostWrite_U32(guard, 0x00d0c0de, msb_base_address);
-  PowerPC::MMU::HostWrite_U32(guard, 0x00d0c0de, msb_base_address + 4);
+  PowerPC::MMU::HostWrite_U32(guard, 0x00d0c0de, memory_base_address);
+  PowerPC::MMU::HostWrite_U32(guard, 0x00d0c0de, memory_base_address + 4);
 
   // Each code is 8 bytes (2 words) wide. There is a starter code and an end code.
-  const u32 start_address = codelist_base_address + CODE_SIZE;
-  const u32 end_address = codelist_end_address - CODE_SIZE;
-  u32 next_address = start_address + CODE_SIZE;
-
-  // TODO: Generalize this for all Rio Games
-  u32 msb_next_addr = msb_base_address + CODE_SIZE;
+  u32 memory_next_addr = memory_base_address + CODE_SIZE;
 
   // NOTE: Only active codes are in the list
   for (const GeckoCode& active_code : s_active_codes)
@@ -240,44 +225,22 @@ static Installation InstallCodeHandlerLocked(const Core::CPUThreadGuard& guard)
     // TODO: Add check on upper bound of free memory
     for (const GeckoCode::Code& code : active_code.codes)
     {
-      PowerPC::MMU::HostWrite_U32(guard, code.address, msb_next_addr);
-      PowerPC::MMU::HostWrite_U32(guard, code.data, msb_next_addr + 4);
-      msb_next_addr += CODE_SIZE;
-    }
-    
-    /* Skipping this section, writing codes to free memory
-    // If the code is not going to fit in the space we have left then we have to skip it
-    if (next_address + active_code.codes.size() * CODE_SIZE > end_address)
-    {
-      NOTICE_LOG_FMT(ACTIONREPLAY,
-                     "Too many GeckoCodes! Ran out of storage space in Game RAM. Could "
-                     "not write: \"{}\". Need {} bytes, only {} remain.",
-                     active_code.name, active_code.codes.size() * CODE_SIZE,
-                     end_address - next_address);
-      continue;
+      PowerPC::MMU::HostWrite_U32(guard, code.address, memory_next_addr);
+      PowerPC::MMU::HostWrite_U32(guard, code.data, memory_next_addr + 4);
+      memory_next_addr += CODE_SIZE;
     }
 
-    for (const GeckoCode::Code& code : active_code.codes)
-    {
-      PowerPC::MMU::HostWrite_U32(guard, code.address, next_address);
-      PowerPC::MMU::HostWrite_U32(guard, code.data, next_address + 4);
-      next_address += CODE_SIZE;
-    }
-    */
+    // TODO optional boundary checking for the free memory
   }
 
-  WARN_LOG_FMT(ACTIONREPLAY, "GeckoCodes: Using {} of {} bytes", next_address - start_address,
-               end_address - start_address);
-
-  // Stop code. Tells the handler that this is the end of the list.
-  PowerPC::MMU::HostWrite_U32(guard, 0xF0000000, next_address);
-  PowerPC::MMU::HostWrite_U32(guard, 0x00000000, next_address + 4);
-  PowerPC::MMU::HostWrite_U32(guard, 0, HLE_TRAMPOLINE_ADDRESS);
+  // WARN_LOG_FMT(ACTIONREPLAY, "GeckoCodes: Using {} of {} bytes", next_address - start_address,
+  //              end_address - start_address);
 
   // Free Memory EOF
   // Stop code. Tells the handler that this is the end of the list.
-  PowerPC::MMU::HostWrite_U32(guard, 0xF0000000, msb_next_addr);
-  PowerPC::MMU::HostWrite_U32(guard, 0x00000000, msb_next_addr + 4);
+  PowerPC::MMU::HostWrite_U32(guard, 0xF0000000, memory_next_addr);
+  PowerPC::MMU::HostWrite_U32(guard, 0x00000000, memory_next_addr + 4);
+  PowerPC::MMU::HostWrite_U32(guard, 0, HLE_TRAMPOLINE_ADDRESS);
 
   // Turn on codes
   PowerPC::MMU::HostWrite_U8(guard, 1, INSTALLER_BASE_ADDRESS + 7);

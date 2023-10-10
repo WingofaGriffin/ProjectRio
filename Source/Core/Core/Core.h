@@ -254,6 +254,9 @@ void SetTagSet(std::optional<TagSet> tagset, bool netplay);
 bool isTagSetActive(std::optional<bool> netplay = std::nullopt);
 std::optional<std::vector<std::string>> GetTagSetGeckoString();
 
+// Helper function for the Gecko loader expansion
+std::optional<u32> getGameFreeMemory();
+
 static const u32 aOpponentPort = 0x802EBF92;
 static const u32 aFielderPort = 0x802EBF94;
 static const u32 aBatterPort = 0x802EBF95;
