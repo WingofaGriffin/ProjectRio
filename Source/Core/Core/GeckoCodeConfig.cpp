@@ -134,74 +134,53 @@ std::vector<GeckoCode> DownloadCodes(std::string gametdb_id, bool* succeeded, bo
   return gcodes;
 }
 
-std::vector<GeckoCode> LoadCodes(const Common::IniFile& globalIni, const Common::IniFile& localIni)
+std::vector<GeckoCode> LoadCodes(const Common::IniFile& globalIni, const Common::IniFile& localIni, std::string gameId)
 {
   std::vector<GeckoCode> gcodes;
+
+  {
+    std::vector<std::string> lines;
+    std::optional<std::string> BuiltInGeckoCodes;
+    if (gameId == "GYQE01")
+      BuiltInGeckoCodes = MSSB_BuiltInGeckoCodes;
+    //else if (gameId == "GFTE01")
+    //  BuiltInGeckoCodes = MGTT_BuiltInGeckoCodes;
+
+    // Split the stringLiteral by newline characters
+    if (BuiltInGeckoCodes.has_value())
+    {
+      size_t start = 0;
+      while (start != std::string::npos)
+      {
+        size_t end = BuiltInGeckoCodes.value().find('\n', start);
+        lines.emplace_back(BuiltInGeckoCodes.value().substr(start, end - start));
+        if (end == std::string::npos)
+        {
+          break;
+        }
+        start = end + 1;
+      }
+
+      lines.erase(std::remove_if(lines.begin(), lines.end(),
+                                 [](const auto& line) { return line.empty() || line[0] == '#'; }),
+                  lines.end());
+      ReadLines(gcodes, lines, true);
+
+      for (GeckoCode& code : gcodes)
+        code.built_in_code = true;
+    }
+  }
 
   for (const auto* ini : {&globalIni, &localIni})
   {
     std::vector<std::string> lines;
     ini->GetLines("Gecko", &lines, false);
 
-    GeckoCode gcode;
-
     lines.erase(std::remove_if(lines.begin(), lines.end(),
                                [](const auto& line) { return line.empty() || line[0] == '#'; }),
                 lines.end());
 
-    for (auto& line : lines)
-    {
-      std::istringstream ss(line);
-
-      // Some locales (e.g. fr_FR.UTF-8) don't split the string stream on space
-      // Use the C locale to workaround this behavior
-      ss.imbue(std::locale::classic());
-
-      switch ((line)[0])
-      {
-      // enabled or disabled code
-      case '+':
-        ss.seekg(1);
-        [[fallthrough]];
-      case '$':
-        if (!gcode.name.empty())
-          gcodes.push_back(gcode);
-        gcode = GeckoCode();
-        gcode.enabled = (1 == ss.tellg());  // silly
-        gcode.user_defined = (ini == &localIni);
-        ss.seekg(1, std::ios_base::cur);
-        // read the code name
-        std::getline(ss, gcode.name, '[');  // stop at [ character (beginning of contributor name)
-        gcode.name = StripWhitespace(gcode.name);
-        // read the code creator name
-        std::getline(ss, gcode.creator, ']');
-        break;
-
-      // notes
-      case '*':
-        gcode.notes.push_back(std::string(++line.begin(), line.end()));
-        break;
-
-      // either part of the code, or an option choice
-      default:
-      {
-        GeckoCode::Code new_code;
-        // TODO: support options
-        if (std::optional<GeckoCode::Code> code = DeserializeLine(line))
-          new_code = *code;
-        else
-          new_code.original_line = line;
-        gcode.codes.push_back(new_code);
-      }
-      break;
-      }
-    }
-
-    // add the last code
-    if (!gcode.name.empty())
-    {
-      gcodes.push_back(gcode);
-    }
+    ReadLines(gcodes, lines, ini == &localIni);
 
     ReadEnabledAndDisabled(*ini, "Gecko", &gcodes);
 
@@ -281,6 +260,65 @@ std::optional<GeckoCode::Code> DeserializeLine(const std::string& line)
     return std::nullopt;
 
   return code;
+}
+
+void ReadLines(std::vector<GeckoCode>& gcodes, std::vector<std::string>& lines, bool user_defined)
+{
+  GeckoCode gcode;
+
+  for (auto& line : lines)
+  {
+    std::istringstream ss(line);
+
+    // Some locales (e.g. fr_FR.UTF-8) don't split the string stream on space
+    // Use the C locale to workaround this behavior
+    ss.imbue(std::locale::classic());
+
+    switch ((line)[0])
+    {
+    // enabled or disabled code
+    case '+':
+      ss.seekg(1);
+      [[fallthrough]];
+    case '$':
+      if (!gcode.name.empty())
+        gcodes.push_back(gcode);
+      gcode = GeckoCode();
+      gcode.enabled = (1 == ss.tellg());  // silly
+      gcode.user_defined = user_defined;
+      ss.seekg(1, std::ios_base::cur);
+      // read the code name
+      std::getline(ss, gcode.name, '[');  // stop at [ character (beginning of contributor name)
+      gcode.name = StripWhitespace(gcode.name);
+      // read the code creator name
+      std::getline(ss, gcode.creator, ']');
+      break;
+
+    // notes
+    case '*':
+      gcode.notes.push_back(std::string(++line.begin(), line.end()));
+      break;
+
+    // either part of the code, or an option choice
+    default:
+    {
+      GeckoCode::Code new_code;
+      // TODO: support options
+      if (std::optional<GeckoCode::Code> code = DeserializeLine(line))
+        new_code = *code;
+      else
+        new_code.original_line = line;
+      gcode.codes.push_back(new_code);
+    }
+    break;
+    }
+  }
+
+  // add the last code
+  if (!gcode.name.empty())
+  {
+    gcodes.push_back(gcode);
+  }
 }
 
 }  // namespace Gecko
