@@ -84,6 +84,7 @@
 #endif
 #include <arpa/inet.h>
 #endif
+#include "Core.h"
 
 namespace NetPlay
 {
@@ -2260,9 +2261,10 @@ bool NetPlayServer::SyncCodes()
   }
   // Sync Gecko Codes
   {
+
     // Create a Gecko Code Vector with just the active codes
     std::vector<Gecko::GeckoCode> s_active_codes =
-        Gecko::SetAndReturnActiveCodes(Gecko::LoadCodes(globalIni, localIni));
+        Gecko::SetAndReturnActiveCodes(Gecko::LoadCodes(globalIni, localIni, game_id));
 
     // Determine Codelist Size
     u16 codelines = 0;
@@ -2305,6 +2307,27 @@ bool NetPlayServer::SyncCodes()
         }
       }
       SendAsyncToClients(std::move(pac));
+    }
+
+    // don't send any gecko codes if playing under a tagset
+    if (!Core::isTagSetActive(true))
+    {
+      std::vector<std::string> v_ActiveGeckoCodes = {};
+      for (const Gecko::GeckoCode& active_code : s_active_codes)
+      {
+        if (active_code.built_in_code == false)
+        {
+          v_ActiveGeckoCodes.push_back(active_code.name);
+        }
+      }
+
+      sf::Packet packet;
+      packet << MessageID::SendCodes;
+      std::string codeStr = "";
+      for (const std::string code : v_ActiveGeckoCodes)
+        codeStr += "• " + code + "\n";
+      packet << codeStr;
+      SendAsyncToClients(std::move(packet));
     }
   }
 

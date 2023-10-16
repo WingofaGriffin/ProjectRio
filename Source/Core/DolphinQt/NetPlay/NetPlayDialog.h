@@ -53,7 +53,6 @@ public:
 
   void Update() override;
   void AppendChat(const std::string& msg) override;
-  void DisplayActiveGeckoCodes();
   void UpdateLobbyLayout();
 
   void OnMsgChangeGame(const NetPlay::SyncIdentifier& sync_identifier,

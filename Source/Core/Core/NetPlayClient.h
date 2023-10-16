@@ -150,8 +150,6 @@ public:
   bool ChangeGame(const std::string& game);
   void SendChatMessage(const std::string& msg);
   void SendSpectatorSetting(bool spectator);
-  void SendActiveGeckoCodes();
-  void GetActiveGeckoCodes();
   void SendCoinFlip(int randNum);
   void SendNightStadium(bool is_night);
   void SendStadium(int stadium);

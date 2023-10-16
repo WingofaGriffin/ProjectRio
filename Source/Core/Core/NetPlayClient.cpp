@@ -1926,19 +1926,6 @@ void NetPlayClient::SendSpectatorSetting(bool spectator)
   SendAsync(std::move(packet));
 }
 
-void NetPlayClient::SendActiveGeckoCodes()
-{
-  sf::Packet packet;
-  packet << MessageID::SendCodes;
-  std::string codeStr = "";
-
-  for (const std::string code : v_ActiveGeckoCodes)
-    codeStr += code + "\n";
-  packet << codeStr;
-
-  SendAsync(std::move(packet));
-}
-
 void NetPlayClient::SendNightStadium(bool is_night)
 {
   sf::Packet packet;
@@ -1955,34 +1942,6 @@ void NetPlayClient::SendDisableReplays(bool disable)
   packet << disable;
 
   SendAsync(std::move(packet));
-}
-
-void NetPlayClient::GetActiveGeckoCodes()
-{
-  // don't use any gecko codes if playing under a tagset
-  if (Core::isTagSetActive(true))
-    return;
-
-  // Find all INI files
-  const auto game_id = m_selected_game.game_id;
-  const auto revision = 0;
-  Common::IniFile globalIni;
-  for (const std::string& filename : ConfigLoaders::GetGameIniFilenames(game_id, revision))
-    globalIni.Load(File::GetSysDirectory() + GAMESETTINGS_DIR DIR_SEP + filename, true);
-  Common::IniFile localIni;
-  for (const std::string& filename : ConfigLoaders::GetGameIniFilenames(game_id, revision))
-    localIni.Load(File::GetUserPath(D_GAMESETTINGS_IDX) + filename, true);
-
-  // Create a Gecko Code Vector with just the active codes
-  std::vector<Gecko::GeckoCode> s_active_codes =
-      Gecko::SetAndReturnActiveCodes(Gecko::LoadCodes(globalIni, localIni));
-
-  v_ActiveGeckoCodes = {};
-  for (const Gecko::GeckoCode& active_code : s_active_codes)
-  {
-    v_ActiveGeckoCodes.push_back(active_code.name);
-  }
-  SendActiveGeckoCodes();
 }
 
 void NetPlayClient::SendCoinFlip(int randNum)
