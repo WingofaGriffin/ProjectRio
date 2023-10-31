@@ -1835,6 +1835,11 @@ void NetPlayClient::ThreadFunc()
     if (m_traversal_client)
       m_traversal_client->HandleResends();
     net = enet_host_service(m_client, &netEvent, 250);
+
+    // run auto golf mode stuff here
+    if (Core::IsRunning() && m_is_running.IsSet())  // redundancy
+      AutoGolfMode();
+
     while (!m_async_queue.Empty())
     {
       INFO_LOG_FMT(NETPLAY, "Processing async queue event.");
@@ -2726,13 +2731,16 @@ void NetPlayClient::SendGameID(u32 gameId)
   netplay_client->SendAsync(std::move(packet));
 }
 
-void NetPlayClient::AutoGolfMode(int nextGolfer)
-{
-  netplay_client->AutoGolfModeLogic(nextGolfer);
-}
 
-void NetPlayClient::AutoGolfModeLogic(int nextGolfer)
+void NetPlayClient::AutoGolfMode()
 {
+  // check core here
+  // - make sure CPU thread isn't active
+  // - if so, check if we're the golfer
+  // - if so, check core for next golfer value and call auto golf function
+  if (Core::IsCPUThread())
+    return;
+
   PlayerId clientID = m_local_player->pid; // refers to netplay client (the computer that's connected)
 
   // don't run the rest of the code unless we're the golfer
@@ -2750,6 +2758,9 @@ void NetPlayClient::AutoGolfModeLogic(int nextGolfer)
     return;
 
   // if the player who should be the gofler isn't in the lobby, return
+  int nextGolfer = Core::GetNextGolferID();
+  if (nextGolfer >= 4 || nextGolfer < 0)  // something's wrong. probably a CPU player
+    return;                               // return to avoid array out-of-range errors
   if (!PortHasPlayerAssigned(nextGolfer))
     return;
 
