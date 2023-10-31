@@ -612,6 +612,13 @@ void NetPlaySetupDialog::accept()
       return;
     }
 
+    if (m_host_server_browser->isChecked() && LobbyNameString().length() > 63)
+    {
+      size_t overflow_characters = LobbyNameString().length() - 63;
+      ModalMessageBox::critical(this, tr("Error"), tr("Lobby Name is too long! Remove %1 characters from your lobby name.").arg(overflow_characters));
+      return;
+    }
+
     if (m_host_server_browser->isChecked() &&
         m_host_server_region->currentData().toString().isEmpty())
     {
