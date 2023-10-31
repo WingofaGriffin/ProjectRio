@@ -228,7 +228,13 @@ void FrameUpdateOnCPUThread()
 // we can do memory reads/writes without worrying
 // anything that needs to read or write to memory should be getting run from here
 void RunRioFunctions(const Core::CPUThreadGuard& guard)
-{  
+{
+  // temporary fix for the launch game crash. the cause of the bug is the stat tracker to some degree
+  // attempts to get a full stack trace were unsuccessful, so this is the temporary fix before a proper
+  // debugging can be done
+  if (Movie::GetCurrentFrame() < 300)
+    return;
+
   if (mGameBeingPlayed == GameName::MarioBaseball)
   {
     if (s_stat_tracker)
