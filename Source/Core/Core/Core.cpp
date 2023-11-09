@@ -201,7 +201,7 @@ void FrameUpdateOnCPUThread()
     if (mGameBeingPlayed != GameName::MarioBaseball)
       NetPlay::NetPlayClient::SendTimeBase();
 
-    if (s_stat_tracker)
+    else if (s_stat_tracker)
     {
       // Figure out if client is hosting via netplay settings. Could use local player as well
       //bool is_hosting = NetPlay::GetNetSettings().m_IsHosting;
@@ -216,12 +216,9 @@ void FrameUpdateOnCPUThread()
       s_stat_tracker->setNetplaySession(true, opponent_name);
     }
   }
-  else
+  else if (s_stat_tracker && mGameBeingPlayed == GameName::MarioBaseball)
   {
-    if (s_stat_tracker)
-    {
-      s_stat_tracker->setNetplaySession(false);
-    }
+    s_stat_tracker->setNetplaySession(false);
   }
 }
 
