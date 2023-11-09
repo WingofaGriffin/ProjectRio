@@ -230,12 +230,9 @@ void FrameUpdateOnCPUThread()
 // anything that needs to read or write to memory should be getting run from here
 void RunRioFunctions(const Core::CPUThreadGuard& guard)
 {
-  if ((Movie::GetCurrentFrame() < 300))
-    return;
-
   if (mGameBeingPlayed == GameName::MarioBaseball)
   {
-    if (s_stat_tracker /*&& (Movie::GetCurrentFrame() > 300)*/)
+    if (s_stat_tracker && (Movie::GetCurrentFrame() > 300))
     {
       s_stat_tracker->Run(guard);
     }
