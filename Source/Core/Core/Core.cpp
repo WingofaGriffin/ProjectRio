@@ -239,12 +239,6 @@ void RunRioFunctions(const Core::CPUThreadGuard& guard)
     {
       s_stat_tracker->Run(guard);
     }
-    if (GetState() == State::Stopping || GetState() == State::Uninitialized)
-    {
-      s_stat_tracker->dumpGame(guard);
-      std::cout << "Emulation stopped. Dumping game." << std::endl;
-      s_stat_tracker->init();
-    }
 
     if (PowerPC::MMU::HostRead_U32(guard, aGameId) == 0)
     {
@@ -982,6 +976,16 @@ void Stop()  // - Hammertime!
   }
 
   s_last_actual_emulation_speed = 1.0;
+
+  // ASSERT(Core::IsCPUThread());
+  if (mGameBeingPlayed == GameName::MarioBaseball)
+  {
+    Core::CPUThreadGuard guard(system);
+
+    s_stat_tracker->dumpGame(guard);
+    std::cout << "Emulation stopped. Dumping game." << std::endl;
+    s_stat_tracker->init();
+  }
 }
 
 void DeclareAsCPUThread()
