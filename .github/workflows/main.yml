@@ -18,10 +18,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: [ Netplay ]
+        build_type: [ Release ]
         include:
-          - build_type: Netplay
-            artifact_name: windows64-netplay
+          - build_type: Release
+            artifact_name: ProjectRio-Windows
             build_config: -G "Ninja" -DCMAKE_SYSTEM_VERSION="10.0.22621" -DCMAKE_BUILD_TYPE="Release" -DQt5_DIR:STRING="D:\a\dolphin\dolphin\Externals\Qt\Qt5.3.0\x64\lib\cmake\Qt5\"
     env:
       DXSDK_DIR: "C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)\\"
@@ -81,11 +81,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: [ Netplay ]
+        build_type: [ Release ]
         include:
-          - build_type: Netplay
+          - build_type: Release
             artifact_name: linux
-            build_config: netplay
+            build_config: release
     name: "Linux ${{ matrix.build_type }}"
     runs-on: ubuntu-22.04
     steps:
@@ -156,11 +156,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        build_type: [ Netplay ]
+        build_type: [ Release ]
         include:
-          - build_type: Netplay
-            artifact_name: macOS-netplay
-            build_config: netplay
+          - build_type: Release
+            artifact_name: ProjectRio-macOS
+            build_config: release
     name: "macOS ${{ matrix.build_type }}"
     runs-on: macos-12
     steps:
