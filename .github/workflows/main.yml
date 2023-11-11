@@ -200,7 +200,6 @@ jobs:
           sound-touch \
           hidapi \
           icu4c \
-          distutils \
           qt@6
       - name: "Build ${{ matrix.build_type }} Dolphin"
         if: success()
