@@ -16,7 +16,7 @@ namespace Common
 #else
 #define BUILD_TYPE_STR ""
 #endif
-#define RIO_REV_STR "2.0.1"
+#define RIO_REV_STR "2.0.2"
 
 const std::string& GetScmRevStr()
 {
@@ -35,10 +35,8 @@ const std::string& GetScmRevStr()
 
 const std::string& GetScmRevGitStr()
 {
-  static const std::string scm_rev_git_str = "f9ea7c7c7f406f135d946492c926372dc8eb2bde";
+  static const std::string scm_rev_git_str = SCM_REV_STR;
   return scm_rev_git_str;
-  //static const std::string scm_rev_git_str = SCM_REV_STR;
-  //return scm_rev_git_str;
 }
 
 const std::string& GetRioRevStr()
