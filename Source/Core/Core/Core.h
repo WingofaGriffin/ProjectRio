@@ -221,6 +221,7 @@ void DoFrameStep();
 void UpdateInputGate(bool require_focus, bool require_full_focus = false);
 
 void UpdateTitle();
+
 float u32ToFloat(u32 value);
 float ms_to_mph(float MetersPerSecond);
 float vectorMagnitude(float x, float y, float z);
@@ -236,6 +237,7 @@ void DisplayPlayerNames(const Core::CPUThreadGuard& guard);
 void SetAvgPing(const Core::CPUThreadGuard& guard);
 void SetNetplayerUserInfo();
 void RunDraftTimer(const Core::CPUThreadGuard& guard);
+int GetNextGolferID();
 
 //enum class GameMode
 //{
