@@ -1651,7 +1651,7 @@ void NetPlayClient::OnNightMsg(sf::Packet& packet)
   bool is_night;
   packet >> is_night;
   m_dialog->OnNightResult(is_night);
-  m_night_stadium = is_night;
+  Gecko::setNightStadium(is_night);
 }
 
 void NetPlayClient::OnDisableReplaysMsg(sf::Packet& packet)
@@ -1659,7 +1659,7 @@ void NetPlayClient::OnDisableReplaysMsg(sf::Packet& packet)
   bool disable;
   packet >> disable;
   m_dialog->OnDisableReplaysResult(disable);
-  m_disable_replays = disable;
+  Gecko::setDisableReplays(disable);
 }
 
 void NetPlayClient::OnChecksumMsg(sf::Packet& packet)
@@ -1712,19 +1712,9 @@ void NetPlayClient::DisplayPlayersPing()
                        OSD::Duration::SHORT, OSD::Color::CYAN);
 }
 
-bool NetPlayClient::isNight()
-{
-  return netplay_client->m_night_stadium;
-}
-
 bool NetPlayClient::isGolfMode()
 {
   return netplay_client->m_host_input_authority;
-}
-
-bool NetPlayClient::isDisableReplays()
-{
-  return netplay_client->m_disable_replays;
 }
 
 std::string NetPlayClient::GetNetplayNames(u8 PortInt)

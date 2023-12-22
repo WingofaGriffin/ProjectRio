@@ -704,7 +704,7 @@ void NetPlayServer::AdjustNightStadium(const bool is_night)
   std::lock_guard lkg(m_crit.game);
   m_current_night_value = is_night;
 
-  // tell clients to change disable replays box
+  // tell clients to change night stadium
   sf::Packet spac;
   spac << MessageID::NightStadium;
   spac << m_current_night_value;
@@ -717,7 +717,7 @@ void NetPlayServer::AdjustReplays(const bool disable)
   std::lock_guard lkg(m_crit.game);
   m_current_disable_replays_value = disable;
 
-  // tell clients to change ranked box
+  // tell clients to change disable replays
   sf::Packet spac;
   spac << MessageID::DisableReplays;
   spac << m_current_disable_replays_value;
@@ -2264,7 +2264,7 @@ bool NetPlayServer::SyncCodes()
 
     // Create a Gecko Code Vector with just the active codes
     std::vector<Gecko::GeckoCode> s_active_codes =
-        Gecko::SetAndReturnActiveCodes(Gecko::LoadCodes(globalIni, localIni, game_id));
+        Gecko::SetAndReturnActiveCodes(Gecko::LoadCodes(globalIni, localIni, game_id, false));
 
     // Determine Codelist Size
     u16 codelines = 0;

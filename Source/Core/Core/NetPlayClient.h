@@ -199,14 +199,10 @@ public:
 
   static void AutoGolfMode(int nextGolfer);
   static std::string GetNetplayNames(u8 PortInt);
-  static bool isNight();
-  static bool isDisableReplays();
   static u32 sGetPlayersMaxPing();
   static std::map<int, LocalPlayers::LocalPlayers::Player> getNetplayerUserInfo();
   static void SendGameID(u32 gameId);
   static bool isGolfMode();
-  bool m_night_stadium = false;
-  bool m_disable_replays = false;
   u32 maxPing;
 
   const PadMappingArray& GetPadMapping() const;

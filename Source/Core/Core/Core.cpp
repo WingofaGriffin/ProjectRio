@@ -77,7 +77,6 @@
 
 //#include "Core/LocalPlayers.h"
 #include "Core/LocalPlayersConfig.h"
-#include "Core/DefaultGeckoCodes.h"
 
 
 #ifdef USE_MEMORYWATCHER
@@ -172,7 +171,6 @@ static Common::EventHook s_frame_presented = AfterPresentEvent::Register(
     },
     "Core Frame Presented");
 
-DefaultGeckoCodes CodeWriter;
 static GameName mGameBeingPlayed = GameName::UnknownGame;
 const std::map<std::string, GameName> mGameMap = {{"GYQE01", GameName::MarioBaseball},
                                                   {"GFTE01", GameName::ToadstoolTour}};
@@ -269,7 +267,6 @@ void RunRioFunctions(const Core::CPUThreadGuard& guard)
   }
 
   DisplayPlayerNames(guard);
-  CodeWriter.RunCodeInject(guard);
   AutoGolfMode(guard);
   TrainingMode(guard);
 }
@@ -763,20 +760,6 @@ float RoundZ(float num)
   return roundf(num);
 }
 
-bool isNight()
-{
-  if (!NetPlay::IsNetPlayRunning())
-    return false;
-  return NetPlay::NetPlayClient::isNight();
-}
-
-bool isDisableReplays()
-{
-  if (!NetPlay::IsNetPlayRunning())
-    return false;
-  return NetPlay::NetPlayClient::isDisableReplays();
-}
-
 void SetAvgPing(const Core::CPUThreadGuard& guard)
 {
   if (!NetPlay::IsNetPlayRunning())
@@ -925,13 +908,6 @@ bool Init(std::unique_ptr<BootParameters> boot, const WindowSystemInfo& wsi)
     mGameBeingPlayed = GameName::UnknownGame;
   else
     mGameBeingPlayed = mGameMap.at(game_id);
-
-  std::optional<std::vector<ClientCode>> client_codes =
-      GetActiveTagSet(NetPlay::IsNetPlayRunning()).has_value() ?
-      GetActiveTagSet(NetPlay::IsNetPlayRunning()).value().client_codes_vector() :
-      std::nullopt;
-
-  CodeWriter.Init(mGameBeingPlayed, client_codes, isTagSetActive(), isNight(), isDisableReplays());
 
   return true;
 }
@@ -1821,6 +1797,11 @@ bool isTagSetActive(std::optional<bool> netplay)
   else
     isActive = tagset_local.has_value();
   return isActive;
+}
+
+bool isNetplay()
+{
+  return NetPlay::IsNetPlayRunning();
 }
 
 std::optional<std::vector<std::string>> GetTagSetGeckoString()

@@ -134,7 +134,8 @@ std::vector<GeckoCode> DownloadCodes(std::string gametdb_id, bool* succeeded, bo
   return gcodes;
 }
 
-std::vector<GeckoCode> LoadCodes(const Common::IniFile& globalIni, const Common::IniFile& localIni, std::string gameId)
+std::vector<GeckoCode> LoadCodes(const Common::IniFile& globalIni, const Common::IniFile& localIni,
+                                 std::string gameId, bool is_netplay)
 {
   std::vector<GeckoCode> gcodes;
 
@@ -142,9 +143,18 @@ std::vector<GeckoCode> LoadCodes(const Common::IniFile& globalIni, const Common:
     std::vector<std::string> lines;
     std::optional<std::string> BuiltInGeckoCodes;
     if (gameId == "GYQE01")
+    {
       BuiltInGeckoCodes = MSSB_BuiltInGeckoCodes;
-    //else if (gameId == "GFTE01")
-    //  BuiltInGeckoCodes = MGTT_BuiltInGeckoCodes;
+      if (is_netplay)
+      {
+        if (isDisableReplays)
+          BuiltInGeckoCodes = BuiltInGeckoCodes.value() + MSSB_DisableReplays;
+        if (isNightStadium)
+          BuiltInGeckoCodes = BuiltInGeckoCodes.value() + MSSB_NightStadium;
+      }
+    }
+    // else if (gameId == "GFTE01")
+    //   BuiltInGeckoCodes = MGTT_BuiltInGeckoCodes;
 
     // Split the stringLiteral by newline characters
     if (BuiltInGeckoCodes.has_value())
@@ -319,6 +329,16 @@ void ReadLines(std::vector<GeckoCode>& gcodes, std::vector<std::string>& lines, 
   {
     gcodes.push_back(gcode);
   }
+}
+
+void setDisableReplays(bool disable)
+{
+  isDisableReplays = disable;
+}
+
+void setNightStadium(bool is_night)
+{
+  isNightStadium = is_night;
 }
 
 }  // namespace Gecko

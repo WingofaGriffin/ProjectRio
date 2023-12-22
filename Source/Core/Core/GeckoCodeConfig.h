@@ -16,13 +16,41 @@ class IniFile;
 
 namespace Gecko
 {
-std::vector<GeckoCode> LoadCodes(const Common::IniFile& globalIni, const Common::IniFile& localIni, std::string gameId);
+std::vector<GeckoCode> LoadCodes(const Common::IniFile& globalIni, const Common::IniFile& localIni, std::string gameId, bool is_netplay);
 std::vector<GeckoCode> DownloadCodes(std::string gametdb_id, bool* succeeded,
                                      bool use_https = true);
 void SaveCodes(Common::IniFile& inifile, const std::vector<GeckoCode>& gcodes);
 
 std::optional<GeckoCode::Code> DeserializeLine(const std::string& line);
 void ReadLines(std::vector<GeckoCode>& gcodes, std::vector<std::string>& lines, bool user_defined);
+
+static bool isDisableReplays = false;
+void setDisableReplays(bool disable);
+static bool isNightStadium = false;
+void setNightStadium(bool is_night);
+//static bool isTrainingMode = false;
+
+const std::string MSSB_DisableReplays = R"(
++$Disable Replays [LittleCoaks]
+206bb214 38000001
+046bb214 38000000
+E2000001 00000000
+*Disables replays
+
+)";
+
+const std::string MSSB_NightStadium = R"(
++$Night Mario Stadium [LittleCoaks]
+20650678 98030058
+C2650678 00000004
+98030058 89240009
+2C090000 4082000C
+3A400001 9A44000A
+60000000 00000000
+E2000001 00000000
+*Mario Stadium is given the night-time effect as seen in Bom-omb Derby
+
+)";
 
 const std::string MSSB_BuiltInGeckoCodes = R"(
 +$Clear Hit Result [PeacockSlayer]
