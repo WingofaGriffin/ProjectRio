@@ -420,7 +420,7 @@ void NetPlayDialog::ConnectWidgets()
     if (server)
       server->AdjustReplays(disable);
     else
-      client->SendNightStadium(disable);
+      client->SendDisableReplays(disable);
   });
 
 
