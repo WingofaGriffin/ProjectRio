@@ -2673,16 +2673,7 @@ void NetPlayClient::AutoGolfMode(int nextGolfer)
 
 void NetPlayClient::AutoGolfModeLogic(int nextGolfer)
 {
-  int clientID = m_local_player->pid; // refers to netplay client (the computer that's connected)
-
-  // Golf Port is the player who should be the golfer
-  int GolfPort = isField ? FieldPort - 1 : BatPort - 1;  // subtract 1 since m_pad_map uses 0->3 instead of 1->4
-  if (GolfPort >= 4 || GolfPort < 0)  // something's wrong. probably a CPU player                                         
-    return;   // return to avoid array out-of-range errors
-
-  // if the player who should be the gofler isn't in the lobby, return
-  if (!PortHasPlayerAssigned(GolfPort))
-    return;
+  PlayerId clientID = m_local_player->pid; // refers to netplay client (the computer that's connected)
 
   // don't run the rest of the code unless we're the golfer
   if (clientID != m_current_golfer) {
