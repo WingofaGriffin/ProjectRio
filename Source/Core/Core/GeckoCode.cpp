@@ -81,22 +81,29 @@ void SetActiveCodes(std::span<const GeckoCode> gcodes)
   {
     s_active_codes.reserve(gcodes.size());
     std::copy_if(gcodes.begin(), gcodes.end(), std::back_inserter(s_active_codes),
-                 [](const GeckoCode& code) { return code.enabled; });
+                 [](const GeckoCode& code) { return code.enabled || code.built_in_code; });
   }
-  else if (tagset_gecko_string.has_value())
+  else
   {
-    GeckoCode gcode;
-    for (auto& line : tagset_gecko_string.value())
+    s_active_codes.reserve(gcodes.size());
+    std::copy_if(gcodes.begin(), gcodes.end(), std::back_inserter(s_active_codes),
+                 [](const GeckoCode& code) { return code.built_in_code; });
+
+    if (tagset_gecko_string.has_value())
     {
-      GeckoCode::Code new_code;
-      // TODO: support options
-      if (std::optional<GeckoCode::Code> code = DeserializeLine(line))
-        new_code = *code;
-      else
-        new_code.original_line = line;
-      gcode.codes.push_back(new_code);
+      GeckoCode gcode;
+      for (auto& line : tagset_gecko_string.value())
+      {
+        GeckoCode::Code new_code;
+        // TODO: support options
+        if (std::optional<GeckoCode::Code> code = DeserializeLine(line))
+          new_code = *code;
+        else
+          new_code.original_line = line;
+        gcode.codes.push_back(new_code);
+      }
+      s_active_codes.push_back(gcode);
     }
-    s_active_codes.push_back(gcode);
   }
 
   s_active_codes.shrink_to_fit();

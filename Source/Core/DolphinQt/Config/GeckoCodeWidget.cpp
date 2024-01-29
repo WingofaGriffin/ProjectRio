@@ -50,7 +50,7 @@ GeckoCodeWidget::GeckoCodeWidget(std::string game_id, std::string gametdb_id, u1
 
     const Common::IniFile game_ini_default =
         SConfig::LoadDefaultGameIni(m_game_id, m_game_revision);
-    m_gecko_codes = Gecko::LoadCodes(game_ini_default, game_ini_local);
+    m_gecko_codes = Gecko::LoadCodes(game_ini_default, game_ini_local, m_game_id, false);
   }
 
   UpdateList();
@@ -329,17 +329,20 @@ void GeckoCodeWidget::UpdateList()
   {
     //const auto& code = m_gecko_codes[i];
     auto& code = m_gecko_codes[i];
+    if (!code.built_in_code)
+    {
+      auto* item =
+          new QListWidgetItem(QString::fromStdString(code.name)
+                                  .replace(QStringLiteral("&lt;"), QChar::fromLatin1('<'))
+                                  .replace(QStringLiteral("&gt;"), QChar::fromLatin1('>')));
 
-    auto* item = new QListWidgetItem(QString::fromStdString(code.name)
-                                         .replace(QStringLiteral("&lt;"), QChar::fromLatin1('<'))
-                                         .replace(QStringLiteral("&gt;"), QChar::fromLatin1('>')));
+      item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable |
+                     Qt::ItemIsDragEnabled);
+      item->setCheckState(code.enabled ? Qt::Checked : Qt::Unchecked);
+      item->setData(Qt::UserRole, static_cast<int>(i));
 
-    item->setFlags(Qt::ItemIsEnabled | Qt::ItemIsSelectable | Qt::ItemIsUserCheckable |
-                   Qt::ItemIsDragEnabled);
-    item->setCheckState(code.enabled ? Qt::Checked : Qt::Unchecked);
-    item->setData(Qt::UserRole, static_cast<int>(i));
-
-    m_code_list->addItem(item);
+      m_code_list->addItem(item);
+    }
   }
   m_code_list->setDragDropMode(QAbstractItemView::InternalMove);
   MakeEnabledList();
@@ -404,7 +407,7 @@ void GeckoCodeWidget::MakeEnabledList()
 
   for (auto code : m_gecko_codes)
   {
-    if (code.enabled)
+    if (code.enabled && !code.built_in_code)
     {
       m_enabled_codes_list.push_back(code.name);
     }

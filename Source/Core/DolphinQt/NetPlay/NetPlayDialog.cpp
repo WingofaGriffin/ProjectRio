@@ -420,7 +420,7 @@ void NetPlayDialog::ConnectWidgets()
     if (server)
       server->AdjustReplays(disable);
     else
-      client->SendNightStadium(disable);
+      client->SendDisableReplays(disable);
   });
 
 
@@ -648,13 +648,6 @@ void NetPlayDialog::OnDisableReplaysResult(bool disable)
     DisplayMessage(tr("Replays Enabled"), "steelblue");
 }
 
-void NetPlayDialog::DisplayActiveGeckoCodes()
-{
-  if (!IsHosting())
-    return;
-  Settings::Instance().GetNetPlayClient()->GetActiveGeckoCodes();
-}
-
 void NetPlayDialog::OnActiveGeckoCodes(std::string codeStr)
 {
   DisplayMessage(QString::fromStdString(codeStr), "cornflowerblue");
@@ -718,7 +711,6 @@ void NetPlayDialog::OnStart()
   if (Settings::Instance().GetNetPlayServer()->RequestStartGame())
   {
     SetOptionsEnabled(false);
-    DisplayActiveGeckoCodes();
   }
 }
 

@@ -226,8 +226,6 @@ float u32ToFloat(u32 value);
 float ms_to_mph(float MetersPerSecond);
 float vectorMagnitude(float x, float y, float z);
 float RoundZ(float num);
-bool isNight();
-bool isDisableReplays();
 void MSSBCalculateNextGolfer(const Core::CPUThreadGuard& guard, int& nextGolfer);
 void MGTTCalculateNextGolfer(const Core::CPUThreadGuard& guard, int& nextGolfer);
 
@@ -254,6 +252,7 @@ void SetGameID(u32 gameID);
 std::optional<TagSet> GetActiveTagSet(bool netplay);
 void SetTagSet(std::optional<TagSet> tagset, bool netplay);
 bool isTagSetActive(std::optional<bool> netplay = std::nullopt);
+bool isNetplay();
 std::optional<std::vector<std::string>> GetTagSetGeckoString();
 
 // Helper function for the Gecko loader expansion
