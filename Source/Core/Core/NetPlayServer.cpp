@@ -84,6 +84,7 @@
 #endif
 #include <arpa/inet.h>
 #endif
+#include "Core.h"
 
 namespace NetPlay
 {
@@ -703,7 +704,7 @@ void NetPlayServer::AdjustNightStadium(const bool is_night)
   std::lock_guard lkg(m_crit.game);
   m_current_night_value = is_night;
 
-  // tell clients to change disable replays box
+  // tell clients to change night stadium
   sf::Packet spac;
   spac << MessageID::NightStadium;
   spac << m_current_night_value;
@@ -716,7 +717,7 @@ void NetPlayServer::AdjustReplays(const bool disable)
   std::lock_guard lkg(m_crit.game);
   m_current_disable_replays_value = disable;
 
-  // tell clients to change ranked box
+  // tell clients to change disable replays
   sf::Packet spac;
   spac << MessageID::DisableReplays;
   spac << m_current_disable_replays_value;
@@ -1089,7 +1090,6 @@ unsigned int NetPlayServer::OnData(sf::Packet& packet, Client& player)
 
   case MessageID::GolfRequest:
   {
-    NOTICE_LOG_FMT(NETPLAY, "Received GolfRequest");
     PlayerId pid;
     packet >> pid;
 
@@ -1105,14 +1105,12 @@ unsigned int NetPlayServer::OnData(sf::Packet& packet, Client& player)
       sf::Packet spac;
       spac << MessageID::GolfPrepare;
       Send(m_players[pid].socket, spac);
-      NOTICE_LOG_FMT(NETPLAY, "Sent GolfPrepare to Player {}", pid);
     }
   }
   break;
 
   case MessageID::GolfRelease:
   {
-    NOTICE_LOG_FMT(NETPLAY, "Received GolfRelease");
     if (m_pending_golfer == 0)
       break;
 
@@ -1120,13 +1118,11 @@ unsigned int NetPlayServer::OnData(sf::Packet& packet, Client& player)
     spac << MessageID::GolfSwitch;
     spac << m_pending_golfer;
     SendToClients(spac);
-    NOTICE_LOG_FMT(NETPLAY, "Sending GolfSwitch to clients. m_pending_golfer: {}", m_pending_golfer);
   }
   break;
 
   case MessageID::GolfAcquire:
   {
-    NOTICE_LOG_FMT(NETPLAY, "Received GolfRelease");
     if (m_pending_golfer == 0)
       break;
 
@@ -1137,7 +1133,6 @@ unsigned int NetPlayServer::OnData(sf::Packet& packet, Client& player)
 
   case MessageID::GolfPrepare:
   {
-    NOTICE_LOG_FMT(NETPLAY, "Received GolfPrepare");
     if (m_pending_golfer == 0)
       break;
 
@@ -1147,8 +1142,6 @@ unsigned int NetPlayServer::OnData(sf::Packet& packet, Client& player)
     spac << MessageID::GolfSwitch;
     spac << PlayerId{0};
     SendToClients(spac);
-    NOTICE_LOG_FMT(NETPLAY, "Sending GolfSwitch to all clients. m_pending_golfer: {}",
-                   m_pending_golfer);
   }
   break;
 
@@ -2260,9 +2253,10 @@ bool NetPlayServer::SyncCodes()
   }
   // Sync Gecko Codes
   {
+
     // Create a Gecko Code Vector with just the active codes
     std::vector<Gecko::GeckoCode> s_active_codes =
-        Gecko::SetAndReturnActiveCodes(Gecko::LoadCodes(globalIni, localIni));
+        Gecko::SetAndReturnActiveCodes(Gecko::LoadCodes(globalIni, localIni, game_id, false));
 
     // Determine Codelist Size
     u16 codelines = 0;
@@ -2305,6 +2299,27 @@ bool NetPlayServer::SyncCodes()
         }
       }
       SendAsyncToClients(std::move(pac));
+    }
+
+    // don't send any gecko codes if playing under a tagset
+    if (!Core::isTagSetActive(true))
+    {
+      std::vector<std::string> v_ActiveGeckoCodes = {};
+      for (const Gecko::GeckoCode& active_code : s_active_codes)
+      {
+        if (active_code.built_in_code == false)
+        {
+          v_ActiveGeckoCodes.push_back(active_code.name);
+        }
+      }
+
+      sf::Packet packet;
+      packet << MessageID::SendCodes;
+      std::string codeStr = "";
+      for (const std::string code : v_ActiveGeckoCodes)
+        codeStr += "• " + code + "\n";
+      packet << codeStr;
+      SendAsyncToClients(std::move(packet));
     }
   }
 

@@ -961,7 +961,7 @@ public:
 
     void init(){
         //Reset all game info
-        m_game_info = GameInfo();
+        m_game_info = GameInfo(); // crashed here when enabling night stadium on netplay in debugging
         m_fielder_tracker[0] = FielderTracker();
         m_fielder_tracker[1] = FielderTracker();
 
