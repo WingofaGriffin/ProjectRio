@@ -2715,7 +2715,7 @@ void NetPlayClient::AutoGolfMode()
   NOTICE_LOG_FMT(NETPLAY, "Client {} will swap golfer to port {}", clientID, nextGolfer + 1);
   RequestGolfControl(m_pad_map[nextGolfer]);
   framesAsGolfer = 0;
-  NOTICE_LOG_FMT(NETPLAY, "Client {} swaps golfer to port {}", clientID, GolfPort + 1);
+  NOTICE_LOG_FMT(NETPLAY, "Client {} swaps golfer to port {}", clientID, nextGolfer + 1);
 }
 
 
