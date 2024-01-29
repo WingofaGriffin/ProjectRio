@@ -139,6 +139,7 @@ static int nLagSpikes = 0;
 static int previousPing = 50;
 
 static int draftTimer = 0;
+static int nextGolferID = 0;
 
 #ifdef USE_MEMORYWATCHER
 static std::unique_ptr<MemoryWatcher> s_memory_watcher;
@@ -200,7 +201,7 @@ void FrameUpdateOnCPUThread()
     if (mGameBeingPlayed != GameName::MarioBaseball)
       NetPlay::NetPlayClient::SendTimeBase();
 
-    if (s_stat_tracker)
+    else if (s_stat_tracker)
     {
       // Figure out if client is hosting via netplay settings. Could use local player as well
       //bool is_hosting = NetPlay::GetNetSettings().m_IsHosting;
@@ -215,12 +216,9 @@ void FrameUpdateOnCPUThread()
       s_stat_tracker->setNetplaySession(true, opponent_name);
     }
   }
-  else
+  else if (s_stat_tracker && mGameBeingPlayed == GameName::MarioBaseball)
   {
-    if (s_stat_tracker)
-    {
-      s_stat_tracker->setNetplaySession(false);
-    }
+    s_stat_tracker->setNetplaySession(false);
   }
 }
 
@@ -228,18 +226,12 @@ void FrameUpdateOnCPUThread()
 // we can do memory reads/writes without worrying
 // anything that needs to read or write to memory should be getting run from here
 void RunRioFunctions(const Core::CPUThreadGuard& guard)
-{  
+{
   if (mGameBeingPlayed == GameName::MarioBaseball)
   {
-    if (s_stat_tracker)
+    if (s_stat_tracker && (Movie::GetCurrentFrame() > 300))
     {
       s_stat_tracker->Run(guard);
-    }
-    if (GetState() == State::Stopping || GetState() == State::Uninitialized)
-    {
-      s_stat_tracker->dumpGame(guard);
-      std::cout << "Emulation stopped. Dumping game." << std::endl;
-      s_stat_tracker->init();
     }
 
     if (PowerPC::MMU::HostRead_U32(guard, aGameId) == 0)
@@ -270,7 +262,8 @@ void RunRioFunctions(const Core::CPUThreadGuard& guard)
 
   DisplayPlayerNames(guard);
   CodeWriter.RunCodeInject(guard);
-  AutoGolfMode(guard);
+  if (IsGolfMode())
+    AutoGolfMode(guard);
   TrainingMode(guard);
 }
 
@@ -289,24 +282,14 @@ void OnFrameEnd()
 
 void AutoGolfMode(const Core::CPUThreadGuard& guard)
 {
-  if (!IsGolfMode())
-    return;
-
-  int nextGolfer = -1;
-
   switch (mGameBeingPlayed) {
   case GameName::MarioBaseball:
-    MSSBCalculateNextGolfer(guard, nextGolfer);
+    MSSBCalculateNextGolfer(guard, nextGolferID);
     break;
   case GameName::ToadstoolTour:
-    MGTTCalculateNextGolfer(guard, nextGolfer);
+    MGTTCalculateNextGolfer(guard, nextGolferID);
     break;
   }
-
-  if (nextGolfer >= 4 || nextGolfer < 0)  // something's wrong. probably a CPU player                                         
-    return;   // return to avoid array out-of-range errors
-
-  NetPlay::NetPlayClient::AutoGolfMode(nextGolfer);
 }
 
 void MSSBCalculateNextGolfer(const Core::CPUThreadGuard& guard, int& nextGolfer)
@@ -926,6 +909,8 @@ bool Init(std::unique_ptr<BootParameters> boot, const WindowSystemInfo& wsi)
   else
     mGameBeingPlayed = mGameMap.at(game_id);
 
+  nextGolferID = 0;
+
   std::optional<std::vector<ClientCode>> client_codes =
       GetActiveTagSet(NetPlay::IsNetPlayRunning()).has_value() ?
       GetActiveTagSet(NetPlay::IsNetPlayRunning()).value().client_codes_vector() :
@@ -985,6 +970,16 @@ void Stop()  // - Hammertime!
   }
 
   s_last_actual_emulation_speed = 1.0;
+
+  // ASSERT(Core::IsCPUThread());
+  if (mGameBeingPlayed == GameName::MarioBaseball)
+  {
+    Core::CPUThreadGuard guard(system);
+
+    s_stat_tracker->dumpGame(guard);
+    std::cout << "Emulation stopped. Dumping game." << std::endl;
+    s_stat_tracker->init();
+  }
 }
 
 void DeclareAsCPUThread()
@@ -1845,6 +1840,11 @@ std::optional<u32> getGameFreeMemory()
   default:
     return std::nullopt;
   }
+}
+
+int GetNextGolferID()
+{
+  return nextGolferID;
 }
 
 }  // namespace Core

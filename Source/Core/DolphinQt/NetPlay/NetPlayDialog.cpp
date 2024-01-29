@@ -1029,6 +1029,9 @@ void NetPlayDialog::Update()
 
 void NetPlayDialog::DisplayMessage(const QString& msg, const std::string& color, int duration)
 {
+  if (msg.isEmpty())
+    return;
+
   QueueOnObject(m_chat_edit, [this, color, msg] {
     m_chat_edit->append(QStringLiteral("<font color='%1'>%2</font>")
                             .arg(QString::fromStdString(color), msg.toHtmlEscaped()));
@@ -1036,7 +1039,7 @@ void NetPlayDialog::DisplayMessage(const QString& msg, const std::string& color,
 
   QColor c(color.empty() ? QStringLiteral("white") : QString::fromStdString(color));
 
-  if (g_ActiveConfig.bShowNetPlayMessages && Core::IsRunning())
+  if (g_ActiveConfig.bShowNetPlayMessages && Core::IsRunning() && g_netplay_chat_ui)
     g_netplay_chat_ui->AppendChat(msg.toStdString(),
                                   {static_cast<float>(c.redF()), static_cast<float>(c.greenF()),
                                    static_cast<float>(c.blueF())});
