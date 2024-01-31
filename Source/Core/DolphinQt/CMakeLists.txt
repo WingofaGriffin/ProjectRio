@@ -429,7 +429,7 @@ if(WIN32)
 
   set_target_properties(dolphin-emu PROPERTIES
     DEBUG_POSTFIX    D
-    OUTPUT_NAME      Dolphin
+    OUTPUT_NAME      "Project Rio"
     WIN32_EXECUTABLE TRUE
   )
 
@@ -547,7 +547,7 @@ if(APPLE)
     MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Info.plist.in
     XCODE_ATTRIBUTE_CODE_SIGN_ENTITLEMENTS "${CMAKE_CURRENT_SOURCE_DIR}/DolphinEmu.entitlements"
     XCODE_ATTRIBUTE_OTHER_CODE_SIGN_FLAGS "--deep --options=runtime"
-    OUTPUT_NAME Dolphin
+    OUTPUT_NAME "Project Rio"
     )
 
   # Copy qt.conf into the bundle
