@@ -223,12 +223,12 @@ void FrameUpdateOnCPUThread()
 // anything that needs to read or write to memory should be getting run from here
 void RunRioFunctions(const Core::CPUThreadGuard& guard)
 {
+  auto& system = Core::System::GetInstance();
+  u64 frame = system.GetMovie().GetCurrentFrame();
+
   if (mGameBeingPlayed == GameName::MarioBaseball)
   {
-    if (s_stat_tracker && (Movie::GetCurrentFrame() > 300))
-    {
-      s_stat_tracker->Run(guard);
-    }
+    s_stat_tracker->Run(guard);
 
     if (PowerPC::MMU::HostRead_U32(guard, aGameId) == 0)
     {
@@ -238,7 +238,6 @@ void RunRioFunctions(const Core::CPUThreadGuard& guard)
     if (NetPlay::IsNetPlayRunning())
     {
       // send checksum for desync detection
-      u64 frame = Movie::GetCurrentFrame();
       if (frame % 60)
       {
         u8 checksumId = (frame / 60) & 0xF;
@@ -253,7 +252,8 @@ void RunRioFunctions(const Core::CPUThreadGuard& guard)
       }
     }
     SetAvgPing(guard);
-    RunDraftTimer(guard);
+    if (frame % 60 == 0) // if it's the 1st frame of second
+      RunDraftTimer(guard);
   }
 
   DisplayPlayerNames(guard);
@@ -680,10 +680,6 @@ void DisplayPlayerNames(const Core::CPUThreadGuard& guard)
 
 void RunDraftTimer(const Core::CPUThreadGuard& guard)
 {
-  // if they have the config off or if it's not 1st frame of second
-  if (Movie::GetCurrentFrame() % 60 != 0)
-    return;
-
   u8 scene = PowerPC::MMU::HostRead_U8(guard, aSceneId);
 
   if (scene < 0x9)
