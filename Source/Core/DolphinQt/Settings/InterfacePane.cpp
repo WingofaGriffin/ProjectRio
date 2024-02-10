@@ -160,7 +160,6 @@ void InterfacePane::CreateUI()
   m_checkbox_focused_hotkeys = new QCheckBox(tr("Hotkeys Require Window Focus"));
   m_checkbox_disable_screensaver = new QCheckBox(tr("Inhibit Screensaver During Emulation"));
 
-  groupbox_layout->addWidget(m_checkbox_use_darkmode);
   groupbox_layout->addWidget(m_checkbox_use_builtin_title_database);
   groupbox_layout->addWidget(m_checkbox_use_covers);
   groupbox_layout->addWidget(m_checkbox_show_debugging_ui);
@@ -276,8 +275,6 @@ void InterfacePane::LoadConfig()
   SignalBlocking(m_combobox_theme)
       ->setCurrentIndex(
           m_combobox_theme->findText(QString::fromStdString(Config::Get(Config::MAIN_THEME_NAME))));
-  SignalBlocking(m_checkbox_use_darkmode)
-      ->setChecked(Settings::Instance().IsDarkMode());
 
   const Settings::StyleType style_type = Settings::Instance().GetStyleType();
   const QString userstyle = Settings::Instance().GetUserStyleName();

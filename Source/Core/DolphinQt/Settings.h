@@ -58,9 +58,6 @@ public:
   bool IsSystemDark();
   bool IsThemeDark();
 
-  void SetDarkMode(bool enabled);
-  bool IsDarkMode();
-
   void SetUserStyleName(const QString& stylesheet_name);
   QString GetUserStyleName() const;
 

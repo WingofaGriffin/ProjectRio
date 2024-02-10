@@ -124,18 +124,6 @@ void Settings::SetThemeName(const QString& theme_name)
   emit ThemeChanged();
 }
 
-
-void Settings::SetDarkMode(bool enabled)
-{
-  GetQSettings().setValue(QStringLiteral("userstyle/darkmode"), enabled);
-}
-
-bool Settings::IsDarkMode()
-{
-  return GetQSettings().value(QStringLiteral("userstyle/darkmode"), false).toBool();
-}
-
-
 QString Settings::GetUserStyleName() const
 {
   if (GetQSettings().contains(QStringLiteral("userstyle/name")))
@@ -192,7 +180,6 @@ void Settings::ApplyStyle()
   const StyleType style_type = GetStyleType();
   const QString stylesheet_name = GetUserStyleName();
   QString stylesheet_contents;
-  bool bDarkMode = IsDarkMode();
 
   // If we haven't found one, we continue with an empty (default) style
   if (!stylesheet_name.isEmpty() && style_type == StyleType::User)
@@ -200,16 +187,6 @@ void Settings::ApplyStyle()
     // Load custom user stylesheet
     QDir directory = QDir(QString::fromStdString(File::GetUserPath(D_STYLES_IDX)));
     QFile stylesheet(directory.filePath(stylesheet_name));
-
-    if (stylesheet.open(QFile::ReadOnly))
-      stylesheet_contents = QString::fromUtf8(stylesheet.readAll().data());
-  }
-  else if (bDarkMode)
-  {
-    // Load defualt stylesheet
-    std::string darkModeFile = "Kuroi (Dark) by Ani.qss";
-    QDir directory = QDir(QString::fromStdString(File::GetSysStylesPath()));
-    QFile stylesheet(directory.filePath(QString::fromStdString(darkModeFile)));
 
     if (stylesheet.open(QFile::ReadOnly))
       stylesheet_contents = QString::fromUtf8(stylesheet.readAll().data());
