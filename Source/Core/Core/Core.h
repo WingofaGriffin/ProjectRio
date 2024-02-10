@@ -140,7 +140,7 @@ private:
   bool m_was_unpaused = false;
 };
 
-bool Init(std::unique_ptr<BootParameters> boot, const WindowSystemInfo& wsi);
+bool Init(Core::System& system, std::unique_ptr<BootParameters> boot, const WindowSystemInfo& wsi);
 void Stop();
 void Shutdown();
 
@@ -163,7 +163,7 @@ bool IsHostThread();
 bool WantsDeterminism();
 
 // [NOT THREADSAFE] For use by Host only
-void SetState(State state);
+void SetState(State state, bool report_state_change = true);
 State GetState();
 
 void SaveScreenShot();

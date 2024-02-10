@@ -45,8 +45,17 @@ void PadMappingDialog::CreateWidgets()
 void PadMappingDialog::ConnectWidgets()
 {
   connect(m_button_box, &QDialogButtonBox::accepted, this, &QDialog::accept);
-  for (const auto& combo : m_gc_boxes)
-    connect(combo, qOverload<int>(&QComboBox::currentIndexChanged), this, &PadMappingDialog::OnMappingChanged);
+  for (const auto& combo_group : {m_gc_boxes, m_wii_boxes})
+  {
+    for (const auto& combo : combo_group)
+    {
+      connect(combo, &QComboBox::currentIndexChanged, this, &PadMappingDialog::OnMappingChanged);
+    }
+  }
+  for (const auto& checkbox : m_gba_boxes)
+  {
+    connect(checkbox, &QCheckBox::stateChanged, this, &PadMappingDialog::OnMappingChanged);
+  }
 }
 
 int PadMappingDialog::exec()
