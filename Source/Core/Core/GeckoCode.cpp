@@ -171,7 +171,7 @@ static Installation InstallCodeHandlerLocked(const Core::CPUThreadGuard& guard)
   // Gets the free memory location for the current game. If game has not specified a
   auto free_memory_base_address = Core::getGameFreeMemory();
   bool use_free_memory = Core::getGameFreeMemory().has_value();
-  const u32 memory_base_address = use_free_memory ? free_memory_base_address.value() : INSTALLER_BASE_ADDRESS;
+  const u32 memory_base_address = use_free_memory ? free_memory_base_address.value() : INSTALLER_BASE_ADDRESS + static_cast<u32>(data.size()) - CODE_SIZE;
 
   // Install code handler
   for (u32 i = 0; i < data.size(); ++i) {
