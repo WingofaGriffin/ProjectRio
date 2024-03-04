@@ -181,15 +181,15 @@ jobs:
         with:
           python-version: "3.11.6"
           architecture: "x64"
-      # - name: "Install 12.0 SDK"
-      #   if: success()
-      #   shell: bash
-      #   working-directory: ${{ github.workspace }}
-      #   run: |
-      #     wget https://github.com/phracker/MacOSX-SDKs/releases/download/12.0/MacOSX12.0.sdk.tar.xz
-      #     tar -xf MacOSX12.0.sdk.tar.xz
-      #     rm MacOSX12.0.sdk.tar.xz
-      #     sudo mv MacOSX12.0.sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/
+      - name: "Install 12.3 SDK"
+        if: success()
+        shell: bash
+        working-directory: ${{ github.workspace }}
+        run: |
+          wget https://github.com/alexey-lysiuk/macos-sdk/releases/download/12.3/MacOSX12.3.tar.xz
+          tar -xf MacOSX12.3.tar.xz
+          rm MacOSX12.3.tar.xz
+          sudo mv MacOSX12.3 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/
       - name: "Download and Install prerequisites"
         if: success()
         shell: bash
