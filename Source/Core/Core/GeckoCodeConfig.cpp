@@ -186,9 +186,9 @@ std::vector<GeckoCode> LoadCodes(const Common::IniFile& globalIni, const Common:
     std::vector<std::string> lines;
     ini->GetLines("Gecko", &lines, false);
 
-    lines.erase(std::remove_if(lines.begin(), lines.end(),
-                               [](const auto& line) { return line.empty() || line[0] == '#'; }),
-                lines.end());
+    GeckoCode gcode;
+
+    std::erase_if(lines, [](const auto& line) { return line.empty() || line[0] == '#'; });
 
     ReadLines(gcodes, lines, ini == &localIni);
 
