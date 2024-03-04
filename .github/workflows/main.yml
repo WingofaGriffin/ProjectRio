@@ -224,7 +224,7 @@ jobs:
           FILE_NAME=${{ env.CURR_DATE }}-${{ env.GIT_HASH }}-${{ env.GIT_TAG }}-${{ matrix.artifact_name }}.tar.gz
           mkdir artifact
           cd ./build/Binaries/
-          zip -r "${FILE_NAME}" "ProjectRio.app"
+          zip -r "${FILE_NAME}" "Dolphin.app"
           mv "${FILE_NAME}" ../../artifact/
       - name: "Publish"
         if: success()
