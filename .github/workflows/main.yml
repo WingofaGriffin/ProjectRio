@@ -181,7 +181,7 @@ jobs:
         with:
           python-version: "3.11.6"
           architecture: "x64"
-      - name: "Install 11.0 SDK"
+      - name: "Install 12.3 SDK"
         if: success()
         shell: bash
         working-directory: ${{ github.workspace }}
