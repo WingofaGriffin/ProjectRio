@@ -190,6 +190,10 @@ jobs:
           tar -xf MacOSX11.0.sdk.tar.xz
           rm MacOSX11.0.sdk.tar.xz
           sudo mv MacOSX11.0.sdk /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/
+        #  wget https://github.com/alexey-lysiuk/macos-sdk/releases/download/12.3/MacOSX12.3.tar.xz
+        #  tar -xf MacOSX12.3.tar.xz
+        #  rm MacOSX12.3.tar.xz
+        #  sudo mv MacOSX12.3 /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/
       - name: "Download and Install prerequisites"
         if: success()
         shell: bash
