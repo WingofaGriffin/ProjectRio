@@ -147,7 +147,7 @@ jobs:
           gettext libudev-dev \
           libsystemd-dev \
           -y
-      - name: "Build ${{ matrix.build_type }} Dolphin"
+      - name: "Build ${{ matrix.build_type }} Project Rio"
         if: success()
         working-directory: ${{ github.workspace }}
         run: |
@@ -206,7 +206,7 @@ jobs:
           hidapi \
           icu4c \
           qt@6
-      - name: "Build ${{ matrix.build_type }} Dolphin"
+      - name: "Build ${{ matrix.build_type }} Project Rio"
         if: success()
         shell: bash
         working-directory: ${{ github.workspace }}
@@ -220,7 +220,7 @@ jobs:
           FILE_NAME=${{ env.CURR_DATE }}-${{ env.GIT_HASH }}-${{ env.GIT_TAG }}-${{ matrix.artifact_name }}.tar.gz
           mkdir artifact
           cd ./build/Binaries/
-          zip -r "${FILE_NAME}" "Dolphin.app"
+          zip -r "${FILE_NAME}" "ProjectRio.app"
           mv "${FILE_NAME}" ../../artifact/
       - name: "Publish"
         if: success()
