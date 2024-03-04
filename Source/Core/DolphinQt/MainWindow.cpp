@@ -699,6 +699,7 @@ void MainWindow::ConnectToolBar()
   connect(m_tool_bar, &ToolBar::StartNetPlayPressed, this, &MainWindow::ShowNetPlaySetupDialog);
   connect(m_tool_bar, &ToolBar::ViewGeckoCodes, this, &MainWindow::ShowGeckoCodes);
   connect(m_tool_bar, &ToolBar::ViewLocalPlayers, this, &MainWindow::ShowLocalPlayersWindow);
+  connect(m_tool_bar, &ToolBar::DiscordPressed, this, &MainWindow::ShowDiscordMenu);
 
 
   connect(m_tool_bar, &ToolBar::StepPressed, m_code_widget, &CodeWidget::Step);
@@ -1281,6 +1282,23 @@ void MainWindow::ShowLocalPlayersWindow()
   m_local_players_window->show();
   m_local_players_window->raise();
   m_local_players_window->activateWindow();
+}
+
+void MainWindow::ShowDiscordMenu()
+{
+  discord_menu = new QMenu(this);
+  discord_menu->setTitle(tr("Discord"));
+
+  QAction* mssb_discord = discord_menu->addAction(tr("&Mario Baseball Community/Netplay Server"));
+  connect(mssb_discord, &QAction::triggered, this, []() {
+    QDesktopServices::openUrl(QUrl(QStringLiteral("https://discord.com/invite/9ZZtpuEPCd")));
+  });
+  QAction* rio_discord = discord_menu->addAction(tr("&Project Rio Development/Support Server"));
+  connect(rio_discord, &QAction::triggered, this, []() {
+    QDesktopServices::openUrl(QUrl(QStringLiteral("https://discord.com/invite/c3r9PabfRU")));
+  });
+
+  discord_menu->exec(QCursor::pos());
 }
 
 void MainWindow::ShowFreeLookWindow()

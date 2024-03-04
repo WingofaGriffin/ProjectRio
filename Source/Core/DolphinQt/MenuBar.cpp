@@ -593,20 +593,13 @@ void MenuBar::AddHelpMenu()
 {
   QMenu* help_menu = addMenu(tr("&Help"));
 
+  QAction* projectrio = help_menu->addAction(tr("&Project Rio Website"));
+  connect(projectrio, &QAction::triggered, this, []() {
+    QDesktopServices::openUrl(QUrl(QStringLiteral("https://www.projectrio.online/")));
+  });
   QAction* website = help_menu->addAction(tr("&Dolphin Website"));
   connect(website, &QAction::triggered, this,
           []() { QDesktopServices::openUrl(QUrl(QStringLiteral("https://dolphin-emu.org/"))); });
-  QAction* projectrio = help_menu->addAction(tr("&Project Rio Website"));
-  connect(projectrio, &QAction::triggered, this,
-          []() { QDesktopServices::openUrl(QUrl(QStringLiteral("https://www.projectrio.online/"))); });
-  QAction* rio_discord = help_menu->addAction(tr("&Project Rio Discord"));
-  connect(rio_discord, &QAction::triggered, this, []() {
-    QDesktopServices::openUrl(QUrl(QStringLiteral("https://discord.com/invite/c3r9PabfRU")));
-  });
-  QAction* mssb_discord = help_menu->addAction(tr("&Mario Baseball Discord"));
-  connect(mssb_discord, &QAction::triggered, this, []() {
-    QDesktopServices::openUrl(QUrl(QStringLiteral("https://discord.com/invite/9ZZtpuEPCd")));
-  });
 
   help_menu->addSeparator();
 
