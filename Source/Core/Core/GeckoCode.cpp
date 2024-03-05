@@ -8,7 +8,6 @@
 #include <mutex>
 #include <tuple>
 #include <vector>
-#include <iostream>
 
 #include "Common/ChunkFile.h"
 #include "Common/CommonPaths.h"
@@ -168,37 +167,9 @@ static Installation InstallCodeHandlerLocked(const Core::CPUThreadGuard& guard)
     mmio_addr = 0xCD;
   }
 
-  // Gets the free memory location for the current game. If game has not specified a
-  auto free_memory_base_address = Core::getGameFreeMemory();
-  bool use_free_memory = Core::getGameFreeMemory().has_value();
-  const u32 memory_base_address = use_free_memory ? free_memory_base_address.value() : INSTALLER_BASE_ADDRESS + static_cast<u32>(data.size()) - CODE_SIZE;
-
   // Install code handler
-  for (u32 i = 0; i < data.size(); ++i) {
-    //We need to change one small part of the binary to point at the free memory location
-    // codehandler.bin
-    // ...
-    // 000000f0: 3fe0 8000 3e80 cc00 a394 4010 6395 00ff  ?...>.....@.c...
-    // 00000100: b2b4 4010 3de0 8000 61ef 2338 63e7 1808  ..@.=...a.#8c... Notes: 3de0 8000 -> 3de0 <Free Space Addr ABCD>, 61ef 2338 -> 61ef <Free Space Addr EFGH>
-    // 00000110: 3cc0 8000 7cd0 3378 3900 0000 3c60 00d0  <...|.3x9...<`..
-    // ...
-
-    if (i==262 && use_free_memory){
-      PowerPC::MMU::HostWrite_U8(guard, (memory_base_address & 0xFF000000) >> 24, INSTALLER_BASE_ADDRESS + i);
-    }
-    else if (i==263 && use_free_memory) {
-      PowerPC::MMU::HostWrite_U8(guard, (memory_base_address & 0x00FF0000) >> 16, INSTALLER_BASE_ADDRESS + i);
-    }
-    else if (i==266 && use_free_memory) {
-      PowerPC::MMU::HostWrite_U8(guard, (memory_base_address & 0x0000FF00) >> 8, INSTALLER_BASE_ADDRESS + i);
-    }
-    else if (i==267 && use_free_memory) {
-      PowerPC::MMU::HostWrite_U8(guard, (memory_base_address & 0x000000FF), INSTALLER_BASE_ADDRESS + i);
-    }
-    else { //Just write the binary as is
-      PowerPC::MMU::HostWrite_U8(guard, data[i], INSTALLER_BASE_ADDRESS + i);
-    }
-  }
+  for (u32 i = 0; i < data.size(); ++i)
+    PowerPC::MMU::HostWrite_U8(guard, data[i], INSTALLER_BASE_ADDRESS + i);
 
   // Patch the code handler to the current system type (Gamecube/Wii)
   for (u32 h = 0; h < data.length(); h += 4)
@@ -212,40 +183,61 @@ static Installation InstallCodeHandlerLocked(const Core::CPUThreadGuard& guard)
     }
   }
 
+  u32 codelist_base_address = INSTALLER_BASE_ADDRESS + static_cast<u32>(data.size()) - CODE_SIZE;
+  u32 codelist_end_address = INSTALLER_END_ADDRESS;
+
+  auto free_memory_base_address = Core::getGameFreeMemory();
+  bool use_free_memory = free_memory_base_address.has_value();
+  if (use_free_memory)
+  {
+    // Move Gecko code handler to the free mem region
+    codelist_base_address = free_memory_base_address.value();
+    codelist_end_address = codelist_base_address + 0xA700;
+    PowerPC::MMU::HostWrite_U32(guard, ((codelist_base_address & 0xFFFF0000) >> 16 ) + 0x3DE00000, 0x80001904);
+    PowerPC::MMU::HostWrite_U32(guard, (codelist_base_address & 0x0000FFFF) + 0x61EF0000, 0x80001908);
+  }
+
   // Write a magic value to 'gameid' (codehandleronly does not actually read this).
   // This value will be read back and modified over time by HLE_Misc::GeckoCodeHandlerICacheFlush.
   PowerPC::MMU::HostWrite_U32(guard, MAGIC_GAMEID, INSTALLER_BASE_ADDRESS);
 
-  // Create GCT in free memory (Preamble)
-  PowerPC::MMU::HostWrite_U32(guard, 0x00d0c0de, memory_base_address);
-  PowerPC::MMU::HostWrite_U32(guard, 0x00d0c0de, memory_base_address + 4);
+  // Create GCT in memory
+  PowerPC::MMU::HostWrite_U32(guard, 0x00d0c0de, codelist_base_address);
+  PowerPC::MMU::HostWrite_U32(guard, 0x00d0c0de, codelist_base_address + 4);
 
   // Each code is 8 bytes (2 words) wide. There is a starter code and an end code.
-  u32 memory_next_addr = memory_base_address + CODE_SIZE;
+  const u32 start_address = codelist_base_address + CODE_SIZE;
+  const u32 end_address = codelist_end_address - CODE_SIZE;
+  u32 next_address = start_address;
 
   // NOTE: Only active codes are in the list
   for (const GeckoCode& active_code : s_active_codes)
   {
-
-    // Always write to the free memory address regardless of size
-    // TODO: Add check on upper bound of free memory
-    for (const GeckoCode::Code& code : active_code.codes)
+    // If the code is not going to fit in the space we have left then we have to skip it
+    if (next_address + active_code.codes.size() * CODE_SIZE > end_address)
     {
-      PowerPC::MMU::HostWrite_U32(guard, code.address, memory_next_addr);
-      PowerPC::MMU::HostWrite_U32(guard, code.data, memory_next_addr + 4);
-      memory_next_addr += CODE_SIZE;
+      NOTICE_LOG_FMT(ACTIONREPLAY,
+                     "Too many GeckoCodes! Ran out of storage space in Game RAM. Could "
+                     "not write: \"{}\". Need {} bytes, only {} remain.",
+                     active_code.name, active_code.codes.size() * CODE_SIZE,
+                     end_address - next_address);
+      continue;
     }
 
-    // TODO optional boundary checking for the free memory
+    for (const GeckoCode::Code& code : active_code.codes)
+    {
+      PowerPC::MMU::HostWrite_U32(guard, code.address, next_address);
+      PowerPC::MMU::HostWrite_U32(guard, code.data, next_address + 4);
+      next_address += CODE_SIZE;
+    }
   }
 
-  // WARN_LOG_FMT(ACTIONREPLAY, "GeckoCodes: Using {} of {} bytes", next_address - start_address,
-  //              end_address - start_address);
+  WARN_LOG_FMT(ACTIONREPLAY, "GeckoCodes: Using {} of {} bytes", next_address - start_address,
+               end_address - start_address);
 
-  // Free Memory EOF
   // Stop code. Tells the handler that this is the end of the list.
-  PowerPC::MMU::HostWrite_U32(guard, 0xF0000000, memory_next_addr);
-  PowerPC::MMU::HostWrite_U32(guard, 0x00000000, memory_next_addr + 4);
+  PowerPC::MMU::HostWrite_U32(guard, 0xF0000000, next_address);
+  PowerPC::MMU::HostWrite_U32(guard, 0x00000000, next_address + 4);
   PowerPC::MMU::HostWrite_U32(guard, 0, HLE_TRAMPOLINE_ADDRESS);
 
   // Turn on codes

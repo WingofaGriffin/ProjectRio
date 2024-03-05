@@ -1820,7 +1820,7 @@ std::optional<u32> getGameFreeMemory()
 {
   switch (mGameBeingPlayed) {
   case GameName::MarioBaseball:
-    return 0x802edb10;
+    return 0x802ed200;
   case GameName::ToadstoolTour:
     return std::nullopt;
   case GameName::UnknownGame:
