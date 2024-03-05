@@ -1790,6 +1790,9 @@ void SetTagSet(std::optional<TagSet> tagset, bool netplay)
 
 bool isTagSetActive(std::optional<bool> netplay)
 {
+  if (!GameSupportsTagSets())
+    return false;
+
   if (!netplay.has_value())
     netplay = NetPlay::IsNetPlayRunning();
 
@@ -1808,12 +1811,23 @@ bool isNetplay()
 
 std::optional<std::vector<std::string>> GetTagSetGeckoString()
 {
+  if (!GameSupportsTagSets())
+    return std::nullopt;
+
   std::optional<TagSet> tagset_active = GetActiveTagSet(NetPlay::IsNetPlayRunning());
 
   if (!tagset_active.has_value())
     return std::nullopt;
 
   return tagset_active.value().gecko_codes_string();
+}
+
+bool GameSupportsTagSets()
+{
+  if (mGameBeingPlayed == GameName::MarioBaseball)
+    return true;
+  else
+    return false;
 }
 
 std::optional<u32> getGameFreeMemory()

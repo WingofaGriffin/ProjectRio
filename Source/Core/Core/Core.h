@@ -254,6 +254,7 @@ void SetTagSet(std::optional<TagSet> tagset, bool netplay);
 bool isTagSetActive(std::optional<bool> netplay = std::nullopt);
 bool isNetplay();
 std::optional<std::vector<std::string>> GetTagSetGeckoString();
+bool GameSupportsTagSets();
 
 // Helper function for the Gecko loader expansion
 std::optional<u32> getGameFreeMemory();
