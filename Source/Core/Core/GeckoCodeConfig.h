@@ -53,6 +53,10 @@ E2000001 00000000
 )";
 
 const std::string MSSB_BuiltInGeckoCodes = R"(
++$Bat Sound On Game Start [LittleCoaks]
+04042cd0 386001bb
+*An unused bat sound effect plays when starting a match
+
 +$Clear Hit Result [PeacockSlayer]
 206BBF88 99090037
 C26BBF88 00000003
