@@ -219,7 +219,7 @@ static std::string MakeGeckoCodeTitle(const GeckoCode& code)
 // used by the SaveGeckoCodes function
 static void SaveGeckoCode(std::vector<std::string>& lines, const GeckoCode& gcode)
 {
-  if (!gcode.user_defined)
+  if (!gcode.user_defined || gcode.built_in_code)
     return;
 
   lines.push_back(MakeGeckoCodeTitle(gcode));
