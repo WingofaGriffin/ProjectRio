@@ -172,7 +172,7 @@ void SaveScreenShot(std::string_view name);
 // This displays messages in a user-visible way.
 void DisplayMessage(std::string message, int time_in_ms);
 
-    void RunRioFunctions(const Core::CPUThreadGuard& guard);
+void RunRioFunctions(const Core::CPUThreadGuard& guard);
 void FrameUpdateOnCPUThread();
 void OnFrameEnd();
 bool IsGolfMode();
@@ -257,7 +257,7 @@ std::optional<std::vector<std::string>> GetTagSetGeckoString();
 bool GameSupportsTagSets();
 
 // Helper function for the Gecko loader expansion
-std::optional<u32> getGameFreeMemory();
+std::optional<std::pair<u32,u32>> getGameFreeMemory();
 
 static const u32 aOpponentPort = 0x802EBF92;
 static const u32 aFielderPort = 0x802EBF94;
