@@ -1010,7 +1010,6 @@ void NetPlayClient::OnStartGame(sf::Packet& packet)
   }
 
   m_dialog->OnMsgStartGame();
-  m_dialog->StartingMsg(Core::isTagSetActive(true));
 }
 
 void NetPlayClient::OnStopGame(sf::Packet& packet)
@@ -2080,6 +2079,8 @@ bool NetPlayClient::StartGame(const std::string& path)
   boot_session_data->SetNetplaySettings(std::make_unique<NetPlay::NetSettings>(m_net_settings));
 
   m_dialog->BootGame(path, std::move(boot_session_data));
+
+  m_dialog->StartingMsg(Core::isTagSetActive(true));
 
   UpdateDevices();
 

@@ -191,8 +191,8 @@ static Installation InstallCodeHandlerLocked(const Core::CPUThreadGuard& guard)
   if (use_free_memory)
   {
     // Move Gecko code handler to the free mem region
-    codelist_base_address = free_memory_base_address.value();
-    codelist_end_address = codelist_base_address + 0xA700;
+    codelist_base_address = free_memory_base_address.value().first;
+    codelist_end_address = free_memory_base_address.value().second;
     PowerPC::MMU::HostWrite_U32(guard, ((codelist_base_address & 0xFFFF0000) >> 16 ) + 0x3DE00000, 0x80001904);
     PowerPC::MMU::HostWrite_U32(guard, (codelist_base_address & 0x0000FFFF) + 0x61EF0000, 0x80001908);
   }
