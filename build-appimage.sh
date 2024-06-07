@@ -12,7 +12,7 @@ UPDATEPLUG_PATH="https://github.com/linuxdeploy/linuxdeploy-plugin-appimage/rele
 UPDATEPLUG_FILE="linuxdeploy-plugin-appimage-x86_64.AppImage"
 UPDATEPLUG_URL="${UPDATEPLUG_PATH}/${UPDATEPLUG_FILE}"
 
-UPDATETOOL_PATH="https://github.com/AppImage/AppImageUpdate/releases/download/continuous"
+UPDATETOOL_PATH="https://github.com/AppImageCommunity/AppImageUpdate/releases/download/continuous"
 UPDATETOOL_FILE="appimageupdatetool-x86_64.AppImage"
 UPDATETOOL_URL="${UPDATETOOL_PATH}/${UPDATETOOL_FILE}"
 
