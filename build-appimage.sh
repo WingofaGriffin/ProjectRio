@@ -1,8 +1,8 @@
 #!/bin/bash -e
 # build-appimage.sh
 
-ZSYNC_STRING="gh-releases-zsync|project-lylat|Ishiiruka|latest|Lylat_Online-x86_64.AppImage.zsync"
-NETPLAY_APPIMAGE_STRING="Lylat_Online-x86_64.AppImage"
+ZSYNC_STRING="gh-releases-zsync|project-rio|Ishiiruka|latest|ProjectRio-x86_64.AppImage.zsync"
+NETPLAY_APPIMAGE_STRING="ProjectRio-x86_64.AppImage"
 
 LINUXDEPLOY_PATH="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous"
 LINUXDEPLOY_FILE="linuxdeploy-x86_64.AppImage"

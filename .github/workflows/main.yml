@@ -29,7 +29,7 @@ jobs:
     runs-on: windows-2022
     steps:
       - name: "Checkout"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: 'Fetch Git Tags'
@@ -73,7 +73,7 @@ jobs:
           move $FILE_NAME ..\..\artifact\
       - name: "Publish"
         if: success()
-        uses: actions/upload-artifact@v2-preview
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
           path: "./artifact/"
@@ -84,13 +84,13 @@ jobs:
         build_type: [ Release ]
         include:
           - build_type: Release
-            artifact_name: linux
+            artifact_name: ProjectRio-Linux
             build_config: release
     name: "Linux ${{ matrix.build_type }}"
     runs-on: ubuntu-22.04
     steps:
       - name: "Checkout"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: 'Fetch Git Tags'
@@ -147,11 +147,35 @@ jobs:
           gettext libudev-dev \
           libsystemd-dev \
           -y
-      - name: "Build ${{ matrix.build_type }} Project Rio"
+      - name: "Build ${{ matrix.build_type }} Linux"
         if: success()
         working-directory: ${{ github.workspace }}
         run: |
           git config core.fileMode false ; chmod +x ./build-linux.sh && ./build-linux.sh ${{ matrix.build_config }}
+      - name: "Build ${{ matrix.build_type }} AppImage"
+        if: success()
+        working-directory: ${{ github.workspace }}
+        run: |
+          chmod +x ./build-appimage.sh
+          ./build-appimage.sh ${{ matrix.build_config }}
+      - name: "Package"
+        if: success()
+        working-directory: ${{ github.workspace }}
+        run: |
+          mkdir artifact
+          FILE_NAME=${{ env.CURR_DATE }}-${{ env.GIT_HASH }}-${{ env.GIT_TAG }}-${{ matrix.artifact_name }}.zip
+          chmod +x ./*.AppImage
+          zip -r -j "${FILE_NAME}" ./*.AppImage*
+          pushd ./AppDir/usr/bin/
+          zip -r -u "../../../${FILE_NAME}" ./Sys
+          popd
+          mv "${FILE_NAME}" ./artifact/
+      - name: "Publish"
+        if: success()
+        uses: actions/upload-artifact@4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: "./artifact/"
   macOS:
     strategy:
       fail-fast: false
@@ -165,7 +189,7 @@ jobs:
     runs-on: macos-12
     steps:
       - name: "Checkout"
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: 'Fetch Git Tags'
@@ -177,7 +201,7 @@ jobs:
           echo "GIT_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
           echo "CURR_DATE=$(date +%Y-%m-%d)" >> $GITHUB_ENV
       - name: "Set up Python"
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11.6"
           architecture: "x64"
@@ -228,7 +252,7 @@ jobs:
           mv "${FILE_NAME}" ../../artifact/
       - name: "Publish"
         if: success()
-        uses: actions/upload-artifact@v2-preview
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
           path: "./artifact/"
